@@ -24,6 +24,8 @@ export const ADMIN_CONFIG = {
     'shahan@gmail.com',       // gmail با g کوچک
     'tradingwitherfan@gmail.com', 
     'mindsetasad@gmail.com', 
+    'eyarrabi@gmail.com', 
+
   ],
   // نقش‌های مجاز
   adminRoles: ['administrator', 'admin', 'super_admin']

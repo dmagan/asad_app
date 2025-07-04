@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Play, Home, PlayCircle, Calendar, UserX, UserCheck, Headphones, Megaphone , MonitorPlay, Gauge} from 'lucide-react';
+import { Menu, Play, Home, PlayCircle, Calendar, UserX, UserCheck, Headphones, Megaphone, MonitorPlay, Gauge, Settings } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { Store } from 'react-notifications-component';
@@ -198,6 +198,7 @@ const [showMimCoinChannel, setShowMimCoinChannel] = useState(false);
 const [unreadNewSupportMessages, setUnreadNewSupportMessages] = useState(0);
 
 
+
   const [showPaymentCard, setShowPaymentCard] = useState({
     show: false,
     productTitle: '',
@@ -207,7 +208,6 @@ const [unreadNewSupportMessages, setUnreadNewSupportMessages] = useState(0);
 
 
   
-
 
   const services = [
     {
@@ -1367,13 +1367,27 @@ const handleSignalStreamClick = async () => {
   }}
 />
 
-      {/* Header */}
+{/* Header */}
 <div className={`px-6 py-4 flex items-center justify-between ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-  <img src="/Logo-UpLeft.png" alt="Logo" className="h-8 w-auto" />
+  {/* در اپ: آیکون تنظیمات، در مرورگر: لوگو */}
+  {typeof window !== 'undefined' && window.ReactNativeWebView ? (
+    <button
+      onClick={() => {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'SHOW_NOTIFICATION_SETTINGS'
+        }));
+      }}
+      className={`p-2 rounded-full transition-all duration-200 hover:bg-opacity-10 hover:bg-gray-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+    >
+      <Settings size={24} />
+    </button>
+  ) : (
+    <img src="/Logo-UpLeft.png" alt="Logo" className="h-8 w-auto" />
+  )}
+  
   <span className={`text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>خانه</span>
   <ThemeSwitcher isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
 </div>
-
 
 {/* ------------------------------------------------------- */}
 
@@ -2055,5 +2069,15 @@ const handleClick = () => {
     </button>
   );
 };
+
+
+
+
+
+
+
+
+
+
 
 export default CourseApp;
