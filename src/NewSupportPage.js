@@ -8,16 +8,16 @@ import newSupportNotificationService from './NewSupportNotificationService';
 
 // کامپوننت نمایش هر پیام با حالت ارسال
 const ChatMessage = ({ message, isDarkMode }) => {
-  const formattedDate = new Date(message.date).toLocaleDateString('fa-IR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-  const formattedTime = new Date(message.date).toLocaleTimeString('fa-IR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
+  const formattedDate = new Date(message.date).toLocaleDateString('en-GB', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
+});
+const formattedTime = new Date(message.date).toLocaleTimeString('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+}); 
 
   return (
     <div className={`flex w-full ${message.isAdmin ? 'justify-start' : 'justify-end'} mb-4`}>
@@ -178,7 +178,7 @@ const TicketsList = ({ tickets, currentTicket, onSelectTicket, isDarkMode, onNew
               {ticket.last_message && (
                 <p className="truncate mb-1">{ticket.last_message.message}</p>
               )}
-              <p>{new Date(ticket.updated_at).toLocaleDateString('fa-IR')}</p>
+<p>{new Date(ticket.updated_at).toLocaleDateString('en-GB')}</p>
             </div>
             
             <div className="flex justify-between items-center mt-2">
@@ -518,12 +518,9 @@ const NewSupportPage = ({ isDarkMode }) => {
           </button>
           
           <div className="flex items-center justify-center flex-1">
-            <button
-              onClick={() => setShowTicketsList(!showTicketsList)}
-              className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} hover:opacity-80`}
-            >
-              {currentTicket ? currentTicket.title : 'پشتیبانی جدید'}
-            </button>
+       <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+  {currentTicket ? currentTicket.title : 'پشتیبانی جدید'}
+</h2>
           </div>
           
           <button 
@@ -573,20 +570,20 @@ const NewSupportPage = ({ isDarkMode }) => {
         <div className={`text-sm ${
           isDarkMode ? 'text-white' : 'text-gray-800'
         }`} dir="rtl" style={{ textAlign: 'right', direction: 'rtl' }}>
-          سلام و خوش آمدید! 👋<br/>
+          سلام و خوش آمدید! <br/>
           این اولین تیکت پشتیبانی شما است. می‌توانید سوالات و درخواست‌های خود را اینجا مطرح کنید.<br/>
-          تیم پشتیبانی ما در اسرع وقت پاسخ خواهد داد. 🙏
+          تیم پشتیبانی ما در اسرع وقت پاسخ خواهد داد. 
         </div>
         <div className="flex justify-end items-center gap-2 mt-2">
           <span className={`text-xs ${
             isDarkMode ? 'text-gray-400' : 'text-gray-500'
           }`}>
-            {new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+            {new Date().toLocaleTimeString('en-GB',{ hour: '2-digit', minute: '2-digit', hour12: false })}
           </span>
           <span className={`text-xs ${
             isDarkMode ? 'text-gray-400' : 'text-gray-500'
           }`}>
-            {new Date().toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+            {new Date().toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' })}
           </span>
         </div>
       </div>

@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeftCircle, X } from 'lucide-react';
+import { ArrowLeftCircle, X, Copy } from 'lucide-react';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './components/VideoPlayer';
 import channelNotificationService from './ChannelNotificationService';
 import PaymentCard from './PaymentCard';
 import { PRODUCT_PRICES } from './config';
+
 
 
 const globalImageCache = new Set();
@@ -440,6 +441,201 @@ useEffect(() => {
     img.classList.add('max-w-full', 'h-auto', 'rounded-xl');
   });
 
+  // پردازش متن‌های قابل کپی
+const processText = (element) => {
+  const walker = document.createTreeWalker(
+    element,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false
+  );
+
+  const textNodes = [];
+  let node;
+  while (node = walker.nextNode()) {
+    textNodes.push(node);
+  }
+
+  textNodes.forEach(textNode => {
+    const text = textNode.textContent;
+const regex = />>(.*?)<</g;
+    
+    if (regex.test(text)) {
+      const fragment = document.createDocumentFragment();
+      let lastIndex = 0;
+text.replace(/>>(.*?)<</g, (match, content, index) => {
+          if (index > lastIndex) {
+          fragment.appendChild(document.createTextNode(text.slice(lastIndex, index)));
+        }
+        
+const copyableSpan = document.createElement('span');
+copyableSpan.className = 'copyable-text';
+
+// ساخت محتوا با آیکون
+const contentSpan = document.createElement('span');
+contentSpan.textContent = content;
+
+const iconSpan = document.createElement('span');
+iconSpan.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; vertical-align: middle;"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="m4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+
+copyableSpan.appendChild(contentSpan);
+copyableSpan.appendChild(iconSpan);
+copyableSpan.onclick = async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  try {
+    // Force user interaction برای اندروید WebView
+    const success = await copyTextFallback(content);
+    
+    if (success) {
+      // نمایش موفقیت
+      copyableSpan.style.background = '#4ade80';
+      setTimeout(() => {
+        copyableSpan.style.background = 'linear-gradient(135deg, #f7d55d, #fbbf24)';
+      }, 500);
+
+      // نمایش پیام کپی شدن
+      showCopyToast('متن کپی شد در حافظه ✓', '#4ade80');
+    } else {
+      throw new Error('Copy failed');
+    }
+    
+  } catch (err) {
+    console.error('خطا در کپی:', err);
+    showCopyToast('خطا در کپی کردن', '#ef4444');
+  }
+};
+
+// تابع کپی قدرتمند
+async function copyTextFallback(text) {
+  // Method 1: Modern Clipboard API
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (err) {
+    console.log('Clipboard API failed:', err);
+  }
+  
+  // Method 2: Selection + execCommand (برای WebView)
+  try {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    
+    // تنظیمات ویژه برای اندروید WebView
+    textArea.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 2em;
+      height: 2em;
+      padding: 0;
+      border: none;
+      outline: none;
+      boxShadow: none;
+      background: transparent;
+      fontSize: 16px;
+      opacity: 0;
+      zIndex: -1000;
+    `;
+    
+    textArea.setAttribute('readonly', '');
+    textArea.setAttribute('contenteditable', 'true');
+    
+    document.body.appendChild(textArea);
+    
+    // Focus قوی
+    textArea.focus();
+    textArea.select();
+    textArea.setSelectionRange(0, 99999);
+    
+    // تلاش چندگانه برای کپی
+    let success = false;
+    
+    // تلاش 1
+    try {
+      success = document.execCommand('copy');
+    } catch (e) {}
+    
+    // تلاش 2 با Selection API
+    if (!success) {
+      try {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(textArea);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        success = document.execCommand('copy');
+        selection.removeAllRanges();
+      } catch (e) {}
+    }
+    
+    // تلاش 3 با تأخیر
+    if (!success) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      try {
+        textArea.select();
+        textArea.setSelectionRange(0, 99999);
+        success = document.execCommand('copy');
+      } catch (e) {}
+    }
+    
+    document.body.removeChild(textArea);
+    return success;
+    
+  } catch (err) {
+    console.log('Fallback method failed:', err);
+    return false;
+  }
+}
+
+// تابع نمایش پیام
+function showCopyToast(message, bgColor) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: ${bgColor};
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: copyFadeInOut 2s ease-in-out forwards;
+  `;
+
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    if (toast.parentNode) {
+      document.body.removeChild(toast);
+    }
+  }, 2000);
+}
+        
+        fragment.appendChild(copyableSpan);
+        lastIndex = index + match.length;
+        return match;
+      });
+      
+      if (lastIndex < text.length) {
+        fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+      }
+      
+      textNode.parentNode.replaceChild(fragment, textNode);
+    }
+  });
+};
+
+processText(doc.body);
+console.log('Processing text completed', doc.body.innerHTML);
+
   if (messageRef.current) {
     messageRef.current.innerHTML = '';
     Array.from(doc.body.childNodes).forEach(node => {
@@ -461,7 +657,7 @@ useEffect(() => {
       });
     });
   }
-}, []); // dependency array را خالی کن
+}, [content]); // content رو اضافه کن
 
 
 
@@ -1227,6 +1423,32 @@ useEffect(() => {
         .message-bubble a:hover {
           text-decoration: underline;
         }
+
+        .copyable-text {
+  background: linear-gradient(135deg, #f7d55d, #fbbf24);
+  color: #1f2937;
+  padding: 2px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-block;
+  margin: 0 2px;
+  transition: all 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.copyable-text:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.copyable-text:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
         
         .message-bubble p {
           margin-top: 0.5em;
@@ -1305,6 +1527,25 @@ useEffect(() => {
             to { opacity: 1; transform: translateY(0); }
           }
         }
+
+        @keyframes copyFadeInOut {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}   
       `}</style>
     </div>
   );

@@ -146,3 +146,20 @@ body::-webkit-scrollbar {
   direction: rtl !important;
   text-align: right !important;
 }
+
+
+/* بهینه‌سازی برای WebView */
+body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* رفع مشکل zoom در iOS */
+input, textarea, select {
+  font-size: 16px !important;
+}

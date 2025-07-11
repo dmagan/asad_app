@@ -16,7 +16,7 @@ const DexServicesPage = ({ isDarkMode, isOpen, onClose }) => {
 const [renewingProduct, setRenewingProduct] = useState(null);
 const [hasDexSubscription, setHasDexSubscription] = useState(false);
 const [showVideo, setShowVideo] = useState(false);
-const [videoUrl] = useState('https://iamvakilet.ir/learn/dex.mp4');
+const [videoUrl] = useState('https://persiancryptosource.com/video/learn/dex.mp4');
 
 
 

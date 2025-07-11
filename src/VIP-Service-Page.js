@@ -17,7 +17,7 @@ const VIPPage = ({ isDarkMode, isOpen, onClose }) => {
   const [renewingProduct, setRenewingProduct] = useState(null);
   const [hasVIPSubscription, setHasVIPSubscription] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const [videoUrl, setVideoUrl] = useState('https://iamvakilet.ir/learn/vip.mp4'); // آدرس ویدیو پیش‌فرض
+  const [videoUrl, setVideoUrl] = useState('https://persiancryptosource.com/video//earn/vip.mp4'); // آدرس ویدیو پیش‌فرض
 
   useEffect(() => {
     // بررسی آیا کاربر در حال تمدید اشتراک است یا خیر

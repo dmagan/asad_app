@@ -15,7 +15,7 @@ const TicketAnswer = ({ isDarkMode, isOpen, onClose }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [isAdmin, setIsAdmin] = useState(true);
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [currentView, setCurrentView] = useState('list');
   
   const cardRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -241,17 +241,24 @@ const TicketAnswer = ({ isDarkMode, isOpen, onClose }) => {
     }, 100);
   };
 
-  const closeCard = () => {
+ const closeCard = () => {
+  if (currentView === 'messages') {
+    // اگر در صفحه پیام‌ها هستیم، برگرد به لیست
+    setCurrentView('list');
+    setSelectedTicket(null);
+  } else {
+    // اگر در لیست هستیم، صفحه را ببند
     setShowCard(false);
     setTimeout(() => {
       onClose();
     }, 300);
-  };
+  }
+};
 
   const selectTicket = (ticket) => {
     setSelectedTicket(ticket);
     loadMessages(ticket.id);
-    setShowSidebar(false);
+    setCurrentView('messages');
   };
 
   const handlePageChange = (newPage) => {
@@ -285,7 +292,7 @@ const TicketAnswer = ({ isDarkMode, isOpen, onClose }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fa-IR', {
+    return new Date(dateString).toLocaleDateString('en-GB', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -323,12 +330,7 @@ const TicketAnswer = ({ isDarkMode, isOpen, onClose }) => {
             <ArrowLeftCircle className="w-8 h-8" />
           </button>
           
-          <button
-            onClick={() => setShowSidebar(true)}
-            className={`absolute left-16 ${isDarkMode ? 'text-gray-100' : 'text-gray-800'} hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-lg transition-colors`}
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+
           
           <h2 className={`w-full text-center text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             {isAdmin ? 'مدیریت تیکت‌های پشتیبانی' : 'تیکت‌های پشتیبانی'}
@@ -341,359 +343,313 @@ const TicketAnswer = ({ isDarkMode, isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Main Content */}
-        <div className="absolute top-16 bottom-0 left-0 right-0 flex">
-          {/* Sidebar Overlay */}
-          {showSidebar && (
-            <div 
-              className="fixed inset-0 bg-black/50 z-50"
-              onClick={() => setShowSidebar(false)}
+     {/* Main Content */}
+<div className="absolute top-16 bottom-0 left-0 right-0">
+  {currentView === 'list' ? (
+    // نمایش لیست تیکت‌ها
+    <div className="h-full flex flex-col">
+      {/* Filters */}
+      {isAdmin && (
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="space-y-2">
+            <label className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              فیلتر بر اساس وضعیت:
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+              className={`w-full p-2 rounded-lg border ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
-              {/* Sidebar */}
-              <div 
-                className={`w-96 h-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border-r ${
-                  isDarkMode ? 'border-gray-700' : 'border-gray-200'
-                } flex flex-col transform transition-transform duration-300 ease-out`}
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  transform: showSidebar ? 'translateX(0)' : 'translateX(-100%)'
-                }}
-              >
-                {/* Sidebar Header */}
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                  <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    لیست تیکت‌ها
-                  </h3>
-                  <button
-                    onClick={() => setShowSidebar(false)}
-                    className={`p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+              <option value="">همه تیکت‌ها</option>
+              <option value="open">تیکت‌های باز</option>
+              <option value="in_progress">در حال بررسی</option>
+              <option value="closed">تیکت‌های بسته</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Tickets Count */}
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex justify-between items-center">
+          <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            {isAdmin ? 'همه تیکت‌ها' : 'تیکت‌های شما'}: {tickets.length}
+          </span>
+          {isAdmin && (
+            <span className={`text-xs px-2 py-1 rounded-full ${
+              isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
+            }`}>
+              ادمین
+            </span>
+          )}
+        </div>
+        
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-3">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-2 py-1 rounded text-xs ${
+                currentPage === 1 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+              } ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+            >
+              قبلی
+            </button>
+            <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              {currentPage} از {totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-2 py-1 rounded text-xs ${
+                currentPage === totalPages 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+              } ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+            >
+              بعدی
+            </button>
+          </div>
+        )}
+      </div>
+      
+      {/* Tickets List */}
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="p-4 text-center">
+            <div className="w-6 h-6 border-2 border-t-transparent border-blue-500 rounded-full animate-spin mx-auto"></div>
+            <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              در حال بارگذاری...
+            </p>
+          </div>
+        ) : tickets.length === 0 ? (
+          <div className="p-4 text-center">
+            <MessageCircle className={`w-12 h-12 mx-auto mb-2 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              هیچ تیکتی یافت نشد
+            </p>
+          </div>
+        ) : (
+          tickets.map(ticket => (
+            <div
+              key={ticket.id}
+              onClick={() => selectTicket(ticket)}
+              className={`p-4 border-b cursor-pointer transition-colors ${
+                isDarkMode ? 'hover:bg-gray-800 border-gray-700' : 'hover:bg-gray-50 border-gray-200'
+              }`}
+            >
+              <div className="space-y-2">
+                <div className="flex justify-between items-start">
+                  <h4 className={`font-medium text-sm leading-tight ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {ticket.title}
+                  </h4>
+                  {ticket.unread_admin_count > 0 && isAdmin && (
+                    <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-2">
+                      {ticket.unread_admin_count}
+                    </span>
+                  )}
+                  {ticket.unread_user_count > 0 && !isAdmin && (
+                    <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-2">
+                      {ticket.unread_user_count}
+                    </span>
+                  )}
                 </div>
 
-                {/* Filters */}
                 {isAdmin && (
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                    <div className="space-y-2">
-                      <label className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        فیلتر بر اساس وضعیت:
-                      </label>
-                      <select
-                        value={statusFilter}
-                        onChange={(e) => handleStatusFilter(e.target.value)}
-                        className={`w-full p-2 rounded-lg border ${
-                          isDarkMode 
-                            ? 'bg-gray-700 border-gray-600 text-white' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                        } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      >
-                        <option value="">همه تیکت‌ها</option>
-                        <option value="open">تیکت‌های باز</option>
-                        <option value="in_progress">در حال بررسی</option>
-                        <option value="closed">تیکت‌های بسته</option>
-                      </select>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <User className={`w-3 h-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {ticket.display_name || 'کاربر ناشناس'} ({ticket.user_email})
+                    </span>
                   </div>
                 )}
 
-                {/* Tickets Count */}
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex justify-between items-center">
-                    <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      {isAdmin ? 'همه تیکت‌ها' : 'تیکت‌های شما'}: {tickets.length}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(ticket.status)}`}>
+                      {getStatusText(ticket.status)}
                     </span>
-                    {isAdmin && (
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        ادمین
-                      </span>
-                    )}
+                    <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      #{ticket.id}
+                    </span>
                   </div>
-                  
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-2 mt-3">
-                      <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className={`px-2 py-1 rounded text-xs ${
-                          currentPage === 1 
-                            ? 'opacity-50 cursor-not-allowed' 
-                            : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                        } ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
-                      >
-                        قبلی
-                      </button>
-                      <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {currentPage} از {totalPages}
+
+                  <div className="flex items-center gap-2">
+                    <Clock className={`w-3 h-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {formatDate(ticket.updated_at)}
+                    </span>
+                  </div>
+
+                  {ticket.user_email && (
+                    <div className="flex items-center gap-2">
+                      <svg className={`w-3 h-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                      </svg>
+                      <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} truncate`}>
+                        {ticket.user_email}
                       </span>
-                      <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className={`px-2 py-1 rounded text-xs ${
-                          currentPage === totalPages 
-                            ? 'opacity-50 cursor-not-allowed' 
-                            : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                        } ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
-                      >
-                        بعدی
-                      </button>
                     </div>
                   )}
-                </div>
-                
-                {/* Tickets List */}
-                <div className="flex-1 overflow-y-auto">
-                  {loading ? (
-                    <div className="p-4 text-center">
-                      <div className="w-6 h-6 border-2 border-t-transparent border-blue-500 rounded-full animate-spin mx-auto"></div>
-                      <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        در حال بارگذاری...
-                      </p>
+
+                  {ticket.last_message && (
+                    <div className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-600'} truncate`}>
+                      <span className="font-medium">
+                        {ticket.last_message.sender_type === 'admin' ? 'ادمین: ' : 'کاربر: '}
+                      </span>
+                      {ticket.last_message.message?.replace(/<[^>]*>/g, '').substring(0, 50)}...
                     </div>
-                  ) : tickets.length === 0 ? (
-                    <div className="p-4 text-center">
-                      <MessageCircle className={`w-12 h-12 mx-auto mb-2 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        هیچ تیکتی یافت نشد
-                      </p>
-                    </div>
-                  ) : (
-                    tickets.map(ticket => (
-                      <div
-                        key={ticket.id}
-                        onClick={() => selectTicket(ticket)}
-                        className={`p-4 border-b cursor-pointer transition-colors ${
-                          selectedTicket && selectedTicket.id === ticket.id
-                            ? isDarkMode ? 'bg-gray-700' : 'bg-blue-50'
-                            : isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-50'
-                        } ${
-                          isDarkMode ? 'border-gray-700' : 'border-gray-200'
-                        }`}
-                      >
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-start">
-                            <h4 className={`font-medium text-sm leading-tight ${
-                              isDarkMode ? 'text-white' : 'text-gray-900'
-                            }`}>
-                              {ticket.title}
-                            </h4>
-                            {ticket.unread_admin_count > 0 && isAdmin && (
-                              <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-2">
-                                {ticket.unread_admin_count}
-                              </span>
-                            )}
-                            {ticket.unread_user_count > 0 && !isAdmin && (
-                              <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-2">
-                                {ticket.unread_user_count}
-                              </span>
-                            )}
-                          </div>
-
-                          {isAdmin && (
-                            <div className="flex items-center gap-2">
-                              <User className={`w-3 h-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                              <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                {ticket.display_name || 'کاربر ناشناس'} ({ticket.user_email})
-                              </span>
-                            </div>
-                          )}
-
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between">
-                              <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(ticket.status)}`}>
-                                {getStatusText(ticket.status)}
-                              </span>
-                              <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                #{ticket.id}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <Clock className={`w-3 h-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                              <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                {formatDate(ticket.updated_at)}
-                              </span>
-                            </div>
-
-                            {ticket.user_email && (
-                              <div className="flex items-center gap-2">
-                                <svg className={`w-3 h-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                                </svg>
-                                <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} truncate`}>
-                                  {ticket.user_email}
-                                </span>
-                              </div>
-                            )}
-
-                            {ticket.last_message && (
-                              <div className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-600'} truncate`}>
-                                <span className="font-medium">
-                                  {ticket.last_message.sender_type === 'admin' ? 'ادمین: ' : 'کاربر: '}
-                                </span>
-                                {ticket.last_message.message?.replace(/<[^>]*>/g, '').substring(0, 50)}...
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))
                   )}
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Messages Area */}
-          <div className="flex-1 flex flex-col">
-            {selectedTicket ? (
-              <>
-                <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        {selectedTicket.title}
-                      </h4>
-                      <div className="flex items-center gap-4 mt-1">
-                        <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          تیکت #{selectedTicket.id}
-                        </span>
-                        {isAdmin && (
-                          <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            کاربر: {selectedTicket.display_name || 'ناشناس'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(selectedTicket.status)}`}>
-                      {getStatusText(selectedTicket.status)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {messages.length === 0 ? (
-                    <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p>هنوز پیامی در این تیکت نیست</p>
-                    </div>
-                  ) : (
-                    messages.map((message) => (
-                      <div key={message.id} className={`flex ${message.isAdmin ? 'justify-end' : 'justify-start'} group`}>
-                        <div className={`max-w-[80%] rounded-2xl p-3 relative ${
-                          message.isAdmin
-                            ? 'bg-[#f7d55d] text-gray-900'
-                            : isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
-                        }`}>
-                          {isAdmin && (
-                            <button
-                              onClick={() => deleteMessage(message.id)}
-                              className={`absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-full hover:bg-red-500 hover:text-white ${
-                                message.isAdmin ? 'text-gray-600' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                              }`}
-                              title="حذف پیام"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
-                          
-                          <div 
-                            className="text-sm message-content"
-                            dangerouslySetInnerHTML={{ __html: message.content }}
-                          />
-                          <div className="flex justify-between items-center gap-2 mt-1">
-                            <span className={`text-xs ${
-                              message.isAdmin ? 'text-gray-700' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                            }`}>
-                              {message.isAdmin ? 'ادمین' : (isAdmin ? (message.sender_name || 'کاربر') : 'شما')}
-                            </span>
-                            <span className={`text-xs ${
-                              message.isAdmin ? 'text-gray-700' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                            }`}>
-                              {new Date(message.date).toLocaleTimeString('fa-IR', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                <div className={`p-4 border-t ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
-                  <div className={`
-                    ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}
-                    rounded-2xl border
-                    ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}
-                  `}>
-                    <div className="flex items-end gap-2 p-2">
-                      <textarea
-                        value={replyMessage}
-                        onChange={(e) => setReplyMessage(e.target.value)}
-                        placeholder="پیام خود را بنویسید..."
-                        className={`
-                          flex-1 p-2 bg-transparent focus:outline-none resize-none
-                          ${isDarkMode ? 'text-white placeholder-gray-400' : 'text-gray-900 placeholder-gray-500'}
-                        `}
-                        style={{ 
-                          direction: 'rtl',
-                          fontSize: '16px'
-                        }}
-                        rows={3}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            sendReply();
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={sendReply}
-                        disabled={!replyMessage.trim() || sending}
-                        className={`
-                          p-2 rounded-full transition-colors
-                          ${
-                            replyMessage.trim() && !sending
-                              ? 'text-[#f7d55d] hover:bg-gray-600'
-                              : isDarkMode ? 'text-gray-600' : 'text-gray-400'
-                          }
-                        `}
-                      >
-                        {sending ? (
-                          <div className="w-5 h-5 border-2 border-t-transparent border-current rounded-full animate-spin" />
-                        ) : (
-                          <Send size={20} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className={`flex-1 flex items-center justify-center ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-              }`}>
-                <div className="text-center">
-                  <MessageCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>تیکتی را برای مشاهده پیام‌ها انتخاب کنید</p>
+          ))
+        )}
+      </div>
+    </div>
+  ) : (
+    // نمایش پیام‌های تیکت
+    <div className="h-full flex flex-col">
+      {selectedTicket && (
+        <>
+          <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {selectedTicket.title}
+                </h4>
+                <div className="flex items-center gap-4 mt-1">
+                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    تیکت #{selectedTicket.id}
+                  </span>
                   {isAdmin && (
-                    <p className="text-sm mt-2 opacity-75">
-                      شما می‌توانید به همه تیکت‌های کاربران پاسخ دهید
-                    </p>
+                    <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      کاربر: {selectedTicket.display_name || 'ناشناس'}
+                    </span>
                   )}
                 </div>
               </div>
-            )}
+              <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(selectedTicket.status)}`}>
+                {getStatusText(selectedTicket.status)}
+              </span>
+            </div>
           </div>
-        </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.length === 0 ? (
+              <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>هنوز پیامی در این تیکت نیست</p>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <div key={message.id} className={`flex ${message.isAdmin ? 'justify-end' : 'justify-start'} group`}>
+                  <div className={`max-w-[80%] rounded-2xl p-3 relative ${
+                    message.isAdmin
+                      ? 'bg-[#f7d55d] text-gray-900'
+                      : isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
+                  }`}>
+                    {isAdmin && (
+                      <button
+                        onClick={() => deleteMessage(message.id)}
+                        className={`absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-full hover:bg-red-500 hover:text-white ${
+                          message.isAdmin ? 'text-gray-600' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}
+                        title="حذف پیام"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                    
+                    <div 
+                      className="text-sm message-content"
+                      dangerouslySetInnerHTML={{ __html: message.content }}
+                    />
+                    <div className="flex justify-between items-center gap-2 mt-1">
+                      <span className={`text-xs ${
+                        message.isAdmin ? 'text-gray-700' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        {message.isAdmin ? 'ادمین' : (isAdmin ? (message.sender_name || 'کاربر') : 'شما')}
+                      </span>
+                      <span className={`text-xs ${
+                        message.isAdmin ? 'text-gray-700' : isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        {new Date(message.date).toLocaleTimeString('en-GB', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className={`p-4 border-t ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+            <div className={`
+              ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}
+              rounded-2xl border
+              ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}
+            `}>
+              <div className="flex items-end gap-2 p-2">
+                <textarea
+                  value={replyMessage}
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  placeholder="پیام خود را بنویسید..."
+                  className={`
+                    flex-1 p-2 bg-transparent focus:outline-none resize-none
+                    ${isDarkMode ? 'text-white placeholder-gray-400' : 'text-gray-900 placeholder-gray-500'}
+                  `}
+                  style={{ 
+                    direction: 'rtl',
+                    fontSize: '16px'
+                  }}
+                  rows={3}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendReply();
+                    }
+                  }}
+                />
+                <button
+                  onClick={sendReply}
+                  disabled={!replyMessage.trim() || sending}
+                  className={`
+                    p-2 rounded-full transition-colors
+                    ${
+                      replyMessage.trim() && !sending
+                        ? 'text-[#f7d55d] hover:bg-gray-600'
+                        : isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                    }
+                  `}
+                >
+                  {sending ? (
+                    <div className="w-5 h-5 border-2 border-t-transparent border-current rounded-full animate-spin" />
+                  ) : (
+                    <Send size={20} />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )}
+</div>
       </div>
     </div>
   );

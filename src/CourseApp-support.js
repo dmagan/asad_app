@@ -88,20 +88,18 @@ const CoinIcon = ({ symbol }) => {
 };
 
 const ThemeSwitcher = ({ isDarkMode, setIsDarkMode }) => {
-  const handleCheckboxChange = () => {
-    const newThemeMode = !isDarkMode;
-    setIsDarkMode(newThemeMode);
-    
-    // ارسال پیام به اپ نیتیو
-    try {
-      if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
-        window.ReactNativeWebView.postMessage(JSON.stringify({ theme: newThemeMode ? 'dark' : 'light' }));
-        //console.log(`Theme change message sent to app: ${newThemeMode ? 'dark' : 'light'}`);
-      }
-    } catch (error) {
-      //console.error('Error sending message to native app:', error);
-    }
-  };
+const handleCheckboxChange = () => {
+  const newThemeMode = !isDarkMode;
+  setIsDarkMode(newThemeMode);
+
+  // ارسال پیام به اپ نیتیو
+  if (window.sendMessageToNative) {
+    window.sendMessageToNative({ 
+      type: 'THEME_CHANGE',
+      theme: newThemeMode ? 'dark' : 'light' 
+    });
+  }
+};
 
   return (
     <label className='themeSwitcherThree relative inline-flex cursor-pointer select-none items-center'>
@@ -160,7 +158,7 @@ const ThemeSwitcher = ({ isDarkMode, setIsDarkMode }) => {
 };
 
 
-const CourseApp = ({  // این قسمت رو جایگزین کنید
+const CourseApp = ({
   isDarkMode,
   setIsDarkMode,
   products,
@@ -171,6 +169,7 @@ const CourseApp = ({  // این قسمت رو جایگزین کنید
   isLoggedIn,
   onLogout,
   unreadSupportMessages,
+  setUnreadSupportMessages,
 }) => {
 
   const navigate = useNavigate();
@@ -1196,9 +1195,42 @@ useEffect(() => {
 
 useEffect(() => {
   if (isLoggedIn) {
+    supportNotificationService.start();
+    supportNotificationService.addListener(count => {
+      setUnreadSupportMessages(count);
+      
+      // ارسال به اپ نیتیو
+      if (count > 0 && window.sendMessageToNative) {
+        window.sendMessageToNative({
+          type: 'NEW_SUPPORT_MESSAGE',
+          count: count
+        });
+      }
+    });
+    
+    return () => {
+      supportNotificationService.removeListener(setUnreadSupportMessages);
+      supportNotificationService.stop();
+    };
+  } else {
+    setUnreadSupportMessages(0);
+  }
+}, [isLoggedIn, setUnreadSupportMessages]); 
+
+// و همچنین اضافه کردن useEffect جداگانه برای newSupportNotificationService:
+useEffect(() => {
+  if (isLoggedIn) {
     newSupportNotificationService.start();
     newSupportNotificationService.addListener(count => {
       setUnreadNewSupportMessages(count);
+      
+      // ارسال به اپ نیتیو
+      if (count > 0 && window.sendMessageToNative) {
+        window.sendMessageToNative({
+          type: 'NEW_SUPPORT_MESSAGE',
+          count: count
+        });
+      }
     });
     
     return () => {
@@ -1369,21 +1401,23 @@ const handleSignalStreamClick = async () => {
 
 {/* Header */}
 <div className={`px-6 py-4 flex items-center justify-between ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-  {/* در اپ: آیکون تنظیمات، در مرورگر: لوگو */}
-  {typeof window !== 'undefined' && window.ReactNativeWebView ? (
-    <button
-      onClick={() => {
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'SHOW_NOTIFICATION_SETTINGS'
-        }));
-      }}
-      className={`p-2 rounded-full transition-all duration-200 hover:bg-opacity-10 hover:bg-gray-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
-    >
-      <Settings size={24} />
-    </button>
-  ) : (
-    <img src="/Logo-UpLeft.png" alt="Logo" className="h-8 w-auto" />
-  )}
+{/* در قسمت Header */}
+{typeof window !== 'undefined' && window.ReactNativeWebView ? (
+  <button
+    onClick={() => {
+      if (window.sendMessageToNative) {
+        window.sendMessageToNative({
+          type: 'OPEN_SETTINGS'
+        });
+      }
+    }}
+    className={`p-2 rounded-full transition-all duration-200 hover:bg-opacity-10 hover:bg-gray-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+  >
+    <Settings size={24} />
+  </button>
+) : (
+  <img src="/Logo-UpLeft.png" alt="Logo" className="h-8 w-auto" />
+)}
   
   <span className={`text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>خانه</span>
   <ThemeSwitcher isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
@@ -2070,7 +2104,7 @@ const handleClick = () => {
   );
 };
 
-
+      
 
 
 

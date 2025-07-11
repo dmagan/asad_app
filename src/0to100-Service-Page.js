@@ -20,7 +20,7 @@ const ZeroTo100ServicePage = ({ isDarkMode, isOpen, onClose }) => {
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(true);
   const [showActualZeroTo100Page, setShowActualZeroTo100Page] = useState(false); // این خط باید اینجا باشد
   const [showVideo, setShowVideo] = useState(false);
-const [videoUrl] = useState('https://iamvakilet.ir/learn/0ta100.mp4'); // این خط رو اضافه کن
+const [videoUrl] = useState('https://persiancryptosource.com/video/learn/0ta100.mp4'); // این خط رو اضافه کن
 
   const navigate = useNavigate();
   const location = useLocation();

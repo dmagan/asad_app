@@ -40,12 +40,28 @@ import ErrorBoundary from './ErrorBoundary';
 import NewSupportPage from './NewSupportPage';
 import newSupportNotificationService from './NewSupportNotificationService';
 import MimCoinChannel from './MimCoinChannel';
+import MimCoinServicesPage from './MimCoin-Services-Page';
 
 
 
 
 
+// تشخیص محیط React Native
+const isReactNative = typeof window !== 'undefined' && window.ReactNativeWebView;
+// تابع کمکی برای ارسال پیام به React Native
+const sendMessageToNative = (message) => {
+  if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
+    try {
+      window.ReactNativeWebView.postMessage(JSON.stringify(message));
+      console.log('پیام به اپ نیتیو ارسال شد:', message);
+    } catch (error) {
+      console.error('خطا در ارسال پیام به اپ نیتیو:', error);
+    }
+  }
+};
 
+// دسترسی سراسری به تابع
+window.sendMessageToNative = sendMessageToNative;
 
 
 // بازنویسی کامل متد چک کردن پیام‌های جدید
@@ -217,26 +233,28 @@ function AppRoutes({
   isLoggedIn,
   handleLogout,
   setIsLoggedIn,
-  unreadSupportMessages
+  unreadSupportMessages,
+  setUnreadSupportMessages
 }) {
   const navigate = useNavigate();
 
   return (
     <Routes>
       <Route path="/" element={
-        <CourseApp 
-          isDarkMode={isDarkMode} 
-          setIsDarkMode={setIsDarkMode} 
-          products={products} 
-          cryptoPrices={cryptoPrices} 
-          stories={stories} 
-          loading={loading} 
-          sliders={sliders}
-          isLoggedIn={isLoggedIn}
-          onLogout={handleLogout}
-          unreadSupportMessages={unreadSupportMessages}
-        />
-      } />
+  <CourseApp 
+    isDarkMode={isDarkMode} 
+    setIsDarkMode={setIsDarkMode} 
+    products={products} 
+    cryptoPrices={cryptoPrices} 
+    stories={stories} 
+    loading={loading} 
+    sliders={sliders}
+    isLoggedIn={isLoggedIn}
+    onLogout={handleLogout}
+    unreadSupportMessages={unreadSupportMessages}
+    setUnreadSupportMessages={setUnreadSupportMessages}
+  />
+} />
       
 <Route path="/new-support" element={
   isLoggedIn ? (
@@ -250,7 +268,9 @@ function AppRoutes({
         loading={loading} 
         sliders={sliders}
         isLoggedIn={isLoggedIn}    
-        onLogout={handleLogout}     
+        onLogout={handleLogout}
+        unreadSupportMessages={unreadSupportMessages}
+        setUnreadSupportMessages={setUnreadSupportMessages}
       />
       <NewSupportPage 
         isDarkMode={isDarkMode} 
@@ -267,7 +287,9 @@ function AppRoutes({
         loading={loading} 
         sliders={sliders}
         isLoggedIn={isLoggedIn}    
-        onLogout={handleLogout}     
+        onLogout={handleLogout}
+        unreadSupportMessages={unreadSupportMessages}
+        setUnreadSupportMessages={setUnreadSupportMessages}
       />
       <LoginPage 
         isDarkMode={isDarkMode} 
@@ -297,6 +319,8 @@ function AppRoutes({
       sliders={sliders}
       isLoggedIn={isLoggedIn}
       onLogout={handleLogout}
+      unreadSupportMessages={unreadSupportMessages}
+      setUnreadSupportMessages={setUnreadSupportMessages}
     />
     <TradeProPage 
       isDarkMode={isDarkMode}
@@ -326,6 +350,8 @@ function AppRoutes({
       sliders={sliders}
       isLoggedIn={isLoggedIn}
       onLogout={handleLogout}
+      unreadSupportMessages={unreadSupportMessages}      
+      setUnreadSupportMessages={setUnreadSupportMessages}
     />
     <TradeProCoursePage 
       isDarkMode={isDarkMode}
@@ -349,6 +375,8 @@ function AppRoutes({
       sliders={sliders}
       isLoggedIn={isLoggedIn}
       onLogout={handleLogout}
+        unreadSupportMessages={unreadSupportMessages}       
+      setUnreadSupportMessages={setUnreadSupportMessages}  
     />
     <Chat
       isDarkMode={isDarkMode}
@@ -370,6 +398,8 @@ function AppRoutes({
       sliders={sliders}
       isLoggedIn={isLoggedIn}
       onLogout={handleLogout}
+      unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
     />
     <PostsChannel 
       isDarkMode={isDarkMode}
@@ -393,6 +423,8 @@ function AppRoutes({
       sliders={sliders}
       isLoggedIn={isLoggedIn}
       onLogout={handleLogout}
+      unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
     />
     <SignalStreamChannel 
       isDarkMode={isDarkMode}
@@ -414,6 +446,8 @@ function AppRoutes({
       sliders={sliders}
       isLoggedIn={isLoggedIn}
       onLogout={handleLogout}
+      unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
     />
     <PublicChannel 
       isDarkMode={isDarkMode}
@@ -434,7 +468,9 @@ function AppRoutes({
       loading={loading} 
       sliders={sliders}
       isLoggedIn={isLoggedIn}    
-      onLogout={handleLogout}     
+      onLogout={handleLogout}    
+      unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages} 
     />
     <VIPPage 
       isDarkMode={isDarkMode}
@@ -461,7 +497,9 @@ function AppRoutes({
               loading={loading} 
               sliders={sliders}
               isLoggedIn={isLoggedIn}    
-              onLogout={handleLogout}     
+              onLogout={handleLogout}    
+              unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages} 
             />
             <ProfilePage 
               isDarkMode={isDarkMode} 
@@ -480,7 +518,9 @@ function AppRoutes({
               loading={loading} 
               sliders={sliders}
               isLoggedIn={isLoggedIn}    
-              onLogout={handleLogout}     
+              onLogout={handleLogout}  
+              unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}   
             />
             <LoginPage 
               isDarkMode={isDarkMode} 
@@ -502,6 +542,8 @@ function AppRoutes({
             sliders={sliders}
             isLoggedIn={isLoggedIn}  
             onLogout={handleLogout}     
+            unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
           />
           <MentorPage isDarkMode={isDarkMode} />
         </>
@@ -519,6 +561,8 @@ function AppRoutes({
             sliders={sliders}
             isLoggedIn={isLoggedIn}    
             onLogout={handleLogout}     
+            unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
           />
           <ProductsPage 
             isDarkMode={isDarkMode} 
@@ -538,6 +582,8 @@ function AppRoutes({
             sliders={sliders}
             isLoggedIn={isLoggedIn}  
             onLogout={handleLogout}     
+            unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
           />
           <PageTransition>
             <FaqPage isDarkMode={isDarkMode} />
@@ -558,6 +604,8 @@ function AppRoutes({
       sliders={sliders}
       isLoggedIn={isLoggedIn}
       onLogout={handleLogout}
+      unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
     />
     <DexPage 
       isDarkMode={isDarkMode}
@@ -582,6 +630,8 @@ function AppRoutes({
               sliders={sliders}
               isLoggedIn={isLoggedIn}    
               onLogout={handleLogout}     
+              unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
             />
             <SupportPage 
               isDarkMode={isDarkMode} 
@@ -599,6 +649,8 @@ function AppRoutes({
               sliders={sliders}
               isLoggedIn={isLoggedIn}    
               onLogout={handleLogout}     
+              unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
             />
             <LoginPage 
               isDarkMode={isDarkMode} 
@@ -621,6 +673,8 @@ function AppRoutes({
               sliders={sliders}
               isLoggedIn={isLoggedIn}
               onLogout={handleLogout}
+              unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
             />
             <ProfilePage 
               isDarkMode={isDarkMode} 
@@ -640,6 +694,8 @@ function AppRoutes({
               sliders={sliders}
               isLoggedIn={isLoggedIn}
               onLogout={handleLogout}
+              unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
             />
             <LoginPage 
               isDarkMode={isDarkMode} 
@@ -662,6 +718,8 @@ function AppRoutes({
       sliders={sliders}
       isLoggedIn={isLoggedIn}    
       onLogout={handleLogout}     
+      unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
     />
     <DexServicesPage 
       isDarkMode={isDarkMode}
@@ -685,6 +743,8 @@ function AppRoutes({
             sliders={sliders}
             isLoggedIn={isLoggedIn}    
             onLogout={handleLogout}     
+            unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
           />
           <ZeroTo100ServicePage 
             isDarkMode={isDarkMode}
@@ -706,6 +766,8 @@ function AppRoutes({
       sliders={sliders}
       isLoggedIn={isLoggedIn}
       onLogout={handleLogout}
+      unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages}
     />
     <ZeroTo100
       isDarkMode={isDarkMode}
@@ -727,7 +789,9 @@ function AppRoutes({
       loading={loading} 
       sliders={sliders}
       isLoggedIn={isLoggedIn}    
-      onLogout={handleLogout}     
+      onLogout={handleLogout}    
+      unreadSupportMessages={unreadSupportMessages}
+setUnreadSupportMessages={setUnreadSupportMessages} 
     />
     <VIPPage 
       isDarkMode={isDarkMode}
@@ -740,7 +804,31 @@ function AppRoutes({
   </>
 } />
 
-      <Route path="/signal-stream" element={
+       <Route path="/signal-stream" element={
+        <>
+          <CourseApp 
+            isDarkMode={isDarkMode} 
+            setIsDarkMode={setIsDarkMode} 
+            products={products} 
+            cryptoPrices={cryptoPrices} 
+            stories={stories} 
+            loading={loading} 
+            sliders={sliders}
+            isLoggedIn={isLoggedIn}    
+            onLogout={handleLogout}  
+            unreadSupportMessages={unreadSupportMessages}
+            setUnreadSupportMessages={setUnreadSupportMessages}   
+          />
+          <SignalStreamServicePage 
+            isDarkMode={isDarkMode}
+            isOpen={true}
+            onClose={() => navigate(-1)}
+          />
+        </>
+      } />
+
+      {/* اضافه کردن Route جدید میم کوین */}
+      <Route path="/mimcoin-services" element={
         <>
           <CourseApp 
             isDarkMode={isDarkMode} 
@@ -752,8 +840,10 @@ function AppRoutes({
             sliders={sliders}
             isLoggedIn={isLoggedIn}    
             onLogout={handleLogout}     
+            unreadSupportMessages={unreadSupportMessages}
+            setUnreadSupportMessages={setUnreadSupportMessages}
           />
-          <SignalStreamServicePage 
+          <MimCoinServicesPage 
             isDarkMode={isDarkMode}
             isOpen={true}
             onClose={() => navigate(-1)}
@@ -1022,6 +1112,10 @@ useEffect(() => {
     sessionStorage.removeItem('userToken');
     sessionStorage.removeItem('userInfo');  
     setIsLoggedIn(false);
+    // ارسال پیام به اپ نیتیو
+  sendMessageToNative({
+    type: 'USER_LOGGED_OUT'
+  });
   };
 
   useEffect(() => {
@@ -1233,6 +1327,60 @@ useEffect(() => {
     fetchStories();
   }, []);
 
+
+  // مدیریت پیام‌های دریافتی از اپ نیتیو
+useEffect(() => {
+  const handleNativeMessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      console.log('پیام دریافت شده از اپ نیتیو:', data);
+      
+      switch (data.type) {
+        case 'THEME_UPDATE':
+          setIsDarkMode(data.theme === 'dark');
+          break;
+        case 'INITIAL_THEME':
+          setIsDarkMode(data.theme === 'dark');
+          break;
+        default:
+          console.log('نوع پیام ناشناخته:', data);
+      }
+    } catch (error) {
+      console.error('خطا در پردازش پیام نیتیو:', error);
+    }
+  };
+
+  if (isReactNative) {
+    document.addEventListener('message', handleNativeMessage);
+    window.addEventListener('message', handleNativeMessage);
+    
+    return () => {
+      document.removeEventListener('message', handleNativeMessage);
+      window.removeEventListener('message', handleNativeMessage);
+    };
+  }
+}, []);
+
+// ارسال تغییرات navigation به اپ نیتیو
+useEffect(() => {
+  if (isReactNative) {
+    const handleRouteChange = () => {
+      sendMessageToNative({
+        type: 'NAVIGATION_STATE_CHANGED',
+        canGoBack: window.history.length > 1,
+        currentPath: window.location.pathname
+      });
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    handleRouteChange(); // برای state اولیه
+    
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+    };
+  }
+}, []);
+
  return (
  <ErrorBoundary isDarkMode={isDarkMode}>
    <div>
@@ -1264,18 +1412,19 @@ useEffect(() => {
            <CustomLoading />
          ) : (
            <AppRoutes 
-             isDarkMode={isDarkMode} 
-             setIsDarkMode={setIsDarkMode}
-             products={products}
-             cryptoPrices={cryptoPrices}
-             stories={stories}
-             loading={loading}
-             sliders={sliders}
-             isLoggedIn={isLoggedIn}
-             handleLogout={handleLogout}
-             setIsLoggedIn={setIsLoggedIn}
-             unreadSupportMessages={unreadSupportMessages}
-           />
+  isDarkMode={isDarkMode} 
+  setIsDarkMode={setIsDarkMode}
+  products={products}
+  cryptoPrices={cryptoPrices}
+  stories={stories}
+  loading={loading}
+  sliders={sliders}
+  isLoggedIn={isLoggedIn}
+  handleLogout={handleLogout}
+  setIsLoggedIn={setIsLoggedIn}
+  unreadSupportMessages={unreadSupportMessages}
+  setUnreadSupportMessages={setUnreadSupportMessages}
+/>
          )}
        </OrientationLock>
      </BrowserRouter>

@@ -45,71 +45,71 @@ const episodes = [
     id: 0,
     title: "1 مقدمه", 
     duration: "20 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/intro1.mp4"
+    videoUrl: "https://persiancryptosource.com/video/dex/intro1.mp4"
   },
     { 
     id: 1,
     title: "2 مقدمه", 
     duration: "37 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/intro2.mp4"
+    videoUrl: "https://persiancryptosource.com/video/dex/intro2.mp4"
   },
   { 
     id: 2, 
     title: "قسمت اول", 
     duration: "29 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/01.mp4" 
+    videoUrl: "https://persiancryptosource.com/video/dex/01.mp4" 
    },
   { 
     id: 3, 
     title: "قسمت دوم", 
     duration: "19 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/02.mp4"
+    videoUrl: "https://persiancryptosource.com/video/dex/02.mp4"
       },
   { 
     id: 4, 
     title: "قسمت سوم", 
     duration: "31 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/03.mp4"  },
+    videoUrl: "https://persiancryptosource.com/video/dex/03.mp4"  },
   { 
     id: 5, 
      title: "قسمت چهارم", 
     duration: "34 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/04.mp4"  },
+    videoUrl: "https://persiancryptosource.com/video/dex/04.mp4"  },
   { 
     id: 6, 
      title: "قسمت پنجم", 
     duration: "22 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/05.mp4"  },
+    videoUrl: "https://persiancryptosource.com/video/dex/05.mp4"  },
   { 
     id: 7, 
      title: "قسمت ششم", 
     duration: "15 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/06.mp4"  },
+    videoUrl: "https://persiancryptosource.com/video/dex/06.mp4"  },
   { 
     id: 8, 
       title: "قسمت هفتم", 
     duration: "9 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/07.mp4"  },
+    videoUrl: "https://persiancryptosource.com/video/dex/07.  mp4"  },
   { 
     id: 9, 
        title: "قسمت هشتم", 
     duration: "22 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/08.mp4"  },
+    videoUrl: "https://persiancryptosource.com/video/dex/08.mp4"  },
   { 
     id: 10, 
       title: "قسمت نهم", 
     duration: "34 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/09.mp4"  },
+    videoUrl: "https://persiancryptosource.com/video/dex/09.mp4"  },
   { 
     id: 11, 
       title: "قسمت دهم", 
     duration: "47 دقیقه",
-    videoUrl: "https://iamvakilet.ir/dex/10.mp4"  },
+    videoUrl: "https://persiancryptosource.com/video/dex/10.mp4"  },
     { 
     id: 12, 
     title: "اصطلاحات دکس", 
     duration: "جستجو",
-    videoUrl: "https://iamvakilet.ir/dex/dex_terms.mp4"  
+    videoUrl: "https://persiancryptosource.com/video/dex/dex_terms.mp4"  
   }
 ];
 
