@@ -85,12 +85,12 @@ const validateRegister = async (userData, selectedCountry) => {
     };
   }
 };
-const LoginPage = ({ isDarkMode, setIsLoggedIn, onClose }) => {
+const LoginPage = ({ isDarkMode, setIsLoggedIn, onClose, defaultTab = "login" }) => {
   const [selectedCountry, setSelectedCountry] = useState({ code: '+41', flag: '🇨🇭', name: 'سوئیس' });
     const [showCountries, setShowCountries] = useState(false);
   const [isLandscape, setIsLandscape] = useState(window.innerHeight < window.innerWidth);
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+const [isLogin, setIsLogin] = useState(defaultTab === "login");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const cardRef = useRef(null);
@@ -115,6 +115,11 @@ const [acceptTerms, setAcceptTerms] = useState(false);
       setShowCard(true);
     }, 100);
   }, []);
+
+  // تنظیم تب پیش‌فرض بر اساس defaultTab prop
+useEffect(() => {
+  setIsLogin(defaultTab === "login");
+}, [defaultTab]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -304,16 +309,26 @@ const handleLoginSuccess = async (result) => {
     }
     
     // هدایت به صفحه اصلی
-    console.log("در حال هدایت به صفحه اصلی...");
-    navigate('/');
+    // هدایت به صفحه اصلی یا بستن کارت لاگین
+if (onClose) {
+  // اگر کارت به عنوان modal باز شده، آن را ببند
+  onClose();
+} else {
+  // در غیر این صورت، به صفحه اصلی هدایت شو
+  navigate('/');
+}
     
   } catch (error) {
     console.error('خطا در فرآیند ورود:', error);
     
     // حتی در صورت خطا، سعی می‌کنیم کاربر را به صفحه اصلی هدایت کنیم
     setTimeout(() => {
-      navigate('/');
-    }, 500);
+  if (onClose) {
+    onClose();
+  } else {
+    navigate('/');
+  }
+}, 500);
   }
 };
   // تابع کمکی برای تنظیم تمدید خودکار توکن
@@ -625,9 +640,9 @@ const setupTokenRefresh = (token, isPersistent) => {
           }
           
           // مستقیم به صفحه اصلی هدایت می‌کنیم
-          setTimeout(() => {
-            navigate('/');
-          }, 1000);
+   // فراخوانی تابع موفقیت لاگین
+await handleLoginSuccess(result);
+
         } else {
           Store.addNotification({
             title: "خطا",
@@ -723,9 +738,12 @@ const setupTokenRefresh = (token, isPersistent) => {
             style: { direction: 'rtl', textAlign: 'right' }
           });
   
-          setTimeout(() => {
-            navigate('/');
-          }, 0);
+// فراخوانی تابع موفقیت لاگین
+const loginData = {
+  token: localStorage.getItem('userToken') || sessionStorage.getItem('userToken'),
+  user_email: formData.email
+};
+await handleLoginSuccess(loginData);
         } else {
           let title = "خطا";
           let message = result.message;

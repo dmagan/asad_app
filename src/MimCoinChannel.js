@@ -22,6 +22,8 @@ const ImageModal = ({ isOpen, onClose, imageUrl }) => {
   const touchesRef = useRef([]);
   const [imageLoaded, setImageLoaded] = useState(false);
   const lastTouchDistanceRef = useRef(0);
+  const [addedToHistory, setAddedToHistory] = useState(false);
+
 
   
 
@@ -768,34 +770,41 @@ const [showPaymentCard, setShowPaymentCard] = useState(false);
 
   // مدیریت دکمه برگشت و انیمیشن
   useEffect(() => {
-    const handleBackButton = () => {
-      if (isOpen) {
-        closeCard();
-      }
-    };
+  const handleBackButton = (event) => {
+    event.preventDefault();
+    closeCard();
+  };
+
+  // اگر صفحه باز است، یک state به تاریخچه اضافه کنیم
+  if (isOpen && !addedToHistory) {
+    window.history.pushState({ mimCoinChannel: true }, '');
+    setAddedToHistory(true);
+  }
   
-    window.addEventListener('popstate', handleBackButton);
-    
-    return () => {
-      window.removeEventListener('popstate', handleBackButton);
-    };
-  }, [isOpen]);
+  // شنونده برای رویداد popstate (فشردن دکمه برگشت)
+  window.addEventListener('popstate', handleBackButton);
+  
+  // پاکسازی event listener
+  return () => {
+    window.removeEventListener('popstate', handleBackButton);
+  };
+}, [isOpen, addedToHistory]);
 
   // بستن کارت با انیمیشن
-  const closeCard = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      setShowCard(false);
-      setIsExiting(false);
-      setAddedToHistory(false);
-      
-      if (onClose) {
-        onClose();
-      } else {
-        navigate(-1);
-      }
-    }, 300);
-  };
+ const closeCard = () => {
+  setIsExiting(true);
+  setTimeout(() => {
+    setShowCard(false);
+    setIsExiting(false);
+    setAddedToHistory(false);
+    
+    if (onClose) {
+      onClose();
+    } else {
+      navigate(-1);
+    }
+  }, 300);
+};
 
   // تابع اسکرول به آخرین پیام
   const scrollToBottom = () => {

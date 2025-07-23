@@ -41,6 +41,8 @@ import NewSupportPage from './NewSupportPage';
 import newSupportNotificationService from './NewSupportNotificationService';
 import MimCoinChannel from './MimCoinChannel';
 import MimCoinServicesPage from './MimCoin-Services-Page';
+import BuyPage from './BuyPage';
+
 
 
 
@@ -253,6 +255,12 @@ function AppRoutes({
     onLogout={handleLogout}
     unreadSupportMessages={unreadSupportMessages}
     setUnreadSupportMessages={setUnreadSupportMessages}
+  />
+} />
+
+<Route path="/buy" element={
+  <BuyPage 
+    isDarkMode={isDarkMode}
   />
 } />
       
@@ -1381,55 +1389,52 @@ useEffect(() => {
   }
 }, []);
 
- return (
- <ErrorBoundary isDarkMode={isDarkMode}>
-   <div>
-     <ReactNotifications />
-     {/** اضافه کردن Toaster در بالای BrowserRouter */}
-     <Toaster 
-       position="top-center" 
-       containerStyle={{ zIndex: 11000 }} 
-     />
+return (
+  <ErrorBoundary isDarkMode={isDarkMode}>
+    <div>
+      <ReactNotifications />
+      <Toaster position="top-center" containerStyle={{ zIndex: 11000 }} />
+      
+      {showIOSPrompt && (
+        <IOSInstallPrompt isDarkMode={isDarkMode} onClose={() => setShowIOSPrompt(false)} />
+      )}
+      
+      {showDesktopWarning && (
+        <DesktopWarning isDarkMode={isDarkMode} />
+      )}
 
-     {/* اضافه کردن کامپوننت راهنمای iOS */}
-     {showIOSPrompt && (
-       <IOSInstallPrompt 
-         isDarkMode={isDarkMode} 
-         onClose={() => setShowIOSPrompt(false)} 
-       />
-     )}
-
-     {/* اضافه کردن هشدار دسکتاپ */}
-     {showDesktopWarning && (
-       <DesktopWarning 
-         isDarkMode={isDarkMode} 
-       />
-     )}
-
-     <BrowserRouter>
-       <OrientationLock isDarkMode={isDarkMode}>
-         {loading ? (
-           <CustomLoading />
-         ) : (
-           <AppRoutes 
-  isDarkMode={isDarkMode} 
-  setIsDarkMode={setIsDarkMode}
-  products={products}
-  cryptoPrices={cryptoPrices}
-  stories={stories}
-  loading={loading}
-  sliders={sliders}
-  isLoggedIn={isLoggedIn}
-  handleLogout={handleLogout}
-  setIsLoggedIn={setIsLoggedIn}
-  unreadSupportMessages={unreadSupportMessages}
-  setUnreadSupportMessages={setUnreadSupportMessages}
-/>
-         )}
-       </OrientationLock>
-     </BrowserRouter>
-   </div>
- </ErrorBoundary>
+      <BrowserRouter>
+        <OrientationLock isDarkMode={isDarkMode}>
+          <Routes>
+            {/* Route مستقل برای صفحه Buy */}
+            <Route path="/buy" element={<BuyPage isDarkMode={isDarkMode} />} />
+            
+            {/* بقیه routes */}
+            {loading ? (
+              <Route path="*" element={<CustomLoading />} />
+            ) : (
+              <Route path="*" element={
+                <AppRoutes 
+                  isDarkMode={isDarkMode} 
+                  setIsDarkMode={setIsDarkMode}
+                  products={products}
+                  cryptoPrices={cryptoPrices}
+                  stories={stories}
+                  loading={loading}
+                  sliders={sliders}
+                  isLoggedIn={isLoggedIn}
+                  handleLogout={handleLogout}
+                  setIsLoggedIn={setIsLoggedIn}
+                  unreadSupportMessages={unreadSupportMessages}
+                  setUnreadSupportMessages={setUnreadSupportMessages}
+                />
+              } />
+            )}
+          </Routes>
+        </OrientationLock>
+      </BrowserRouter>
+    </div>
+  </ErrorBoundary>
 );
   
 };

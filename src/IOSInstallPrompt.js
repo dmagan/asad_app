@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Share, SquarePlus, ChevronsDown, X, Smartphone, Monitor } from 'lucide-react';
+import { Share, SquarePlus, ChevronsDown, X } from 'lucide-react';
 
 // توابع تشخیص دستگاه
 const detectDevice = () => {
@@ -8,13 +8,8 @@ const detectDevice = () => {
   // تشخیص iOS (آیفون و آیپد)
   const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
   
-  // تشخیص دستگاه موبایل یا تبلت به صورت کلی
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-  
   return {
-    isIOS,
-    isMobile,
-    isDesktop: !isMobile
+    isIOS
   };
 };
 
@@ -38,41 +33,6 @@ export const shouldShowPrompt = () => {
   
   // اگر بیش از 24 ساعت گذشته، دوباره نمایش دهیم
   return timeSinceLastShown > oneDayInMs;
-};
-
-// کامپوننت هشدار برای دسکتاپ
-const DesktopWarning = ({ onClose }) => {
-  return (
-    <div className="fixed inset-0 z-[1000] bg-black bg-opacity-85 flex items-center justify-center">
-      <div className="relative w-full max-w-md mx-auto">
-        <button
-          className="absolute top-4 right-7 w-8 h-8 flex items-center justify-center bg-gray-800 hover:bg-gray-700 text-white rounded-full"
-          onClick={onClose}
-        >
-          <X size={20} />
-        </button>
-
-        <div className="p-6 bg-gray-900 bg-opacity-90 rounded-md mx-4">
-          <div className="flex justify-center mb-8 mt-4">
-            <Monitor size={64} className="text-red-500" />
-          </div>
-
-          <div className="space-y-6 text-center" dir="rtl">
-            <h2 className="text-white text-xl font-bold">توجه!</h2>
-            <p className="text-white">
-              این برنامه فقط برای استفاده در گوشی‌های هوشمند و تبلت طراحی شده است.
-            </p>
-            <p className="text-white">
-              لطفاً با گوشی یا تبلت خود به این سایت مراجعه کنید.
-            </p>
-            <div className="flex justify-center mt-4">
-              <Smartphone size={48} className="text-blue-400" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 };
 
 // کامپوننت اصلی IOSInstallPrompt
@@ -138,7 +98,7 @@ const IOSInstallPrompt = ({ isDarkMode, onClose }) => {
   );
 };
 
-// کامپوننت اصلی که بر اساس نوع دستگاه، پیام مناسب را نمایش می‌دهد
+// کامپوننت اصلی که فقط برای iOS پیام نمایش می‌دهد
 const DeviceDetectionWrapper = () => {
   const [showPrompt, setShowPrompt] = useState(false);
   const [deviceInfo, setDeviceInfo] = useState(null);
@@ -148,9 +108,16 @@ const DeviceDetectionWrapper = () => {
     const device = detectDevice();
     setDeviceInfo(device);
     
-    // نمایش پیام اگر دستگاه iOS باشد و زمان نمایش مجدد رسیده باشد
-    // یا اگر دستگاه دسکتاپ باشد
-    if ((device.isIOS && shouldShowPrompt()) || device.isDesktop) {
+    // بررسی اینکه آیا در صفحه buy هستیم یا نه
+    const currentPath = window.location.pathname;
+    
+    // اگر در صفحه buy هستیم، پیام را نمایش نده
+    if (currentPath === '/buy') {
+      return;
+    }
+    
+    // نمایش پیام فقط اگر دستگاه iOS باشد و زمان نمایش مجدد رسیده باشد
+    if (device.isIOS && shouldShowPrompt()) {
       setShowPrompt(true);
     }
   }, []);
@@ -161,10 +128,8 @@ const DeviceDetectionWrapper = () => {
 
   if (!showPrompt || !deviceInfo) return null;
 
-  // نمایش پیام مناسب بر اساس نوع دستگاه
-  return deviceInfo.isDesktop ? (
-    <DesktopWarning onClose={handleClose} />
-  ) : deviceInfo.isIOS ? (
+  // نمایش پیام فقط برای iOS
+  return deviceInfo.isIOS ? (
     <IOSInstallPrompt onClose={handleClose} />
   ) : null;
 };

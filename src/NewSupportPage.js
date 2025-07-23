@@ -22,7 +22,7 @@ const formattedTime = new Date(message.date).toLocaleTimeString('en-GB', {
   return (
     <div className={`flex w-full ${message.isAdmin ? 'justify-start' : 'justify-end'} mb-4`}>
       <div
-        className={`max-w-[80%] rounded-2xl p-4 relative ${
+className={`max-w-[80%] min-w-0 w-fit rounded-2xl p-4 relative overflow-hidden ${
           message.isAdmin
             ? isDarkMode
               ? 'bg-gray-700'
@@ -38,8 +38,8 @@ const formattedTime = new Date(message.date).toLocaleTimeString('en-GB', {
             : 'bg-[#f7d55d]'
         }`}
       >
-      <div
-  className={`text-sm message-content break-words whitespace-pre-wrap ${
+    <div
+  className={`text-sm message-content ${
     message.isAdmin
       ? isDarkMode
         ? 'text-white'
@@ -47,13 +47,18 @@ const formattedTime = new Date(message.date).toLocaleTimeString('en-GB', {
       : 'text-gray-900'
   }`}
   dir="rtl"
-  style={{ 
-    textAlign: 'right', 
-    direction: 'rtl',
-    wordBreak: 'break-word',
-    overflowWrap: 'break-word',
-    whiteSpace: 'pre-wrap'
-  }}
+ style={{ 
+  textAlign: 'right',
+  direction: 'rtl',
+  wordBreak: 'break-all',
+  overflowWrap: 'break-word',
+  whiteSpace: 'pre-wrap',
+  maxWidth: '100%',
+  overflow: 'hidden',
+  width: '100%',
+  minWidth: 0,
+  display: 'block'
+}}
   dangerouslySetInnerHTML={{ __html: message.content }}
 />
         <div className="flex justify-end items-center gap-2 mt-2">
@@ -220,7 +225,7 @@ const NewSupportPage = ({ isDarkMode }) => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // انیمیشن ورود صفحه
+  // انیم   یشن ورود صفحه
   useEffect(() => {
     setTimeout(() => {
       setShowCard(true);

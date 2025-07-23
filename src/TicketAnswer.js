@@ -16,19 +16,42 @@ const TicketAnswer = ({ isDarkMode, isOpen, onClose }) => {
   const [statusFilter, setStatusFilter] = useState('');
   const [isAdmin, setIsAdmin] = useState(true);
   const [currentView, setCurrentView] = useState('list');
-  
+  const [addedToHistory, setAddedToHistory] = useState(false);
+
   const cardRef = useRef(null);
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => {
-        setShowCard(true);
-        loadTickets();
-      }, 100);
-    }
-  }, [isOpen]);
+useEffect(() => {
+  const handleBackButton = (event) => {
+    event.preventDefault();
+    closeCard();
+  };
+
+  // اگر صفحه باز است، یک state به تاریخچه اضافه کنیم
+  if (isOpen && !addedToHistory) {
+    window.history.pushState({ ticketAnswer: true }, '');
+    setAddedToHistory(true);
+  }
+  
+  // شنونده برای رویداد popstate (فشردن دکمه برگشت)
+  window.addEventListener('popstate', handleBackButton);
+  
+  // پاکسازی event listener
+  return () => {
+    window.removeEventListener('popstate', handleBackButton);
+  };
+}, [isOpen, addedToHistory]);
+
+useEffect(() => {
+  if (isOpen) {
+    setTimeout(() => {
+      setShowCard(true);
+      loadTickets();
+    }, 100);
+  }
+}, [isOpen]);
+
 
   const loadTickets = async (page = 1, status = '') => {
     setLoading(true);
@@ -249,6 +272,7 @@ const TicketAnswer = ({ isDarkMode, isOpen, onClose }) => {
   } else {
     // اگر در لیست هستیم، صفحه را ببند
     setShowCard(false);
+    setAddedToHistory(false);
     setTimeout(() => {
       onClose();
     }, 300);
@@ -553,7 +577,7 @@ const TicketAnswer = ({ isDarkMode, isOpen, onClose }) => {
             ) : (
               messages.map((message) => (
                 <div key={message.id} className={`flex ${message.isAdmin ? 'justify-end' : 'justify-start'} group`}>
-                  <div className={`max-w-[80%] rounded-2xl p-3 relative ${
+<div className={`max-w-[80%] min-w-0 rounded-2xl p-3 relative overflow-hidden ${
                     message.isAdmin
                       ? 'bg-[#f7d55d] text-gray-900'
                       : isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
@@ -571,9 +595,18 @@ const TicketAnswer = ({ isDarkMode, isOpen, onClose }) => {
                     )}
                     
                     <div 
-                      className="text-sm message-content"
-                      dangerouslySetInnerHTML={{ __html: message.content }}
-                    />
+  className="text-sm message-content"
+  style={{ 
+    wordBreak: 'break-word',
+    overflowWrap: 'anywhere',
+    whiteSpace: 'pre-wrap',
+    maxWidth: '100%',
+    overflow: 'hidden',
+    lineBreak: 'anywhere',
+    wordWrap: 'break-word'
+  }}
+  dangerouslySetInnerHTML={{ __html: message.content }}
+/>
                     <div className="flex justify-between items-center gap-2 mt-1">
                       <span className={`text-xs ${
                         message.isAdmin ? 'text-gray-700' : isDarkMode ? 'text-gray-400' : 'text-gray-500'

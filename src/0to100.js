@@ -129,13 +129,13 @@ const episodes = [
     id: 14, 
     title: "مانیتورینگ",
     duration: "29 دقیقه",
-    videoUrl: "https://persiancryptosource.com/video0to100/Monitoring_Sites_Tutorial.mp4"
+    videoUrl: "https://persiancryptosource.com/video/0to100/Monitoring_Sites_Tutorial.mp4"
   },
   { 
     id: 15, 
     title: "صرافی البانک",
     duration: "109 دقیقه",
-    videoUrl: "https://persiancryptosource.com/video0to100/Lbank_Exchange_Tutorial.mp4"
+    videoUrl: "https://persiancryptosource.com/video/0to100/Lbank_Exchange_Tutorial.mp4"
   },
   { 
     id: 16, 
@@ -159,7 +159,7 @@ const episodes = [
     id: 19, 
     title: "مونتوم",
     duration: "44 دقیقه",
-    videoUrl: "https://161.97.78.202/video/0to100/Momentum_Analysis.mp4"
+    videoUrl: "hhttps://persiancryptosource.com/video/0to100/Momentum_Analysis.mp4"
   },
 
 ];
