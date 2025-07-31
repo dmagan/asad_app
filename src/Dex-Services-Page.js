@@ -344,14 +344,14 @@ useEffect(() => {
 )}
 
       {/* Video Player */}
-      {showVideo && (
-        <VideoPlayer
-          videoUrl={videoUrl}
-          title="ویدیو معرفی دکس تریدینگ"
-          isDarkMode={isDarkMode}
-          onClose={() => setShowVideo(false)}
-        />
-      )}
+{showVideo && (
+  <VideoPlayer
+    videoUrl={videoUrl}
+    title="ویدیو معرفی دکس تریدینگ"
+    isDarkMode={isDarkMode}
+    onClose={() => setShowVideo(false)}
+  />
+)}
     </div>
   );
 };

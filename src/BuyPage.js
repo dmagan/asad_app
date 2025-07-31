@@ -157,25 +157,6 @@ const BuyPage = ({ isDarkMode }) => {
           ))}
           
 
-{/* Video Section */}
-<div className={`p-4 rounded-2xl border-2 mb-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-  <div className="mb-3">
-    <h3 className={`font-medium text-base mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`} dir="rtl">
-      بازخورد کاربران
-    </h3>
-    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} dir="rtl">
-      تجربه واقعی کاربران از دوره‌های آموزشی
-    </p>
-  </div>
-  <video 
-    className="w-full h-auto rounded-xl"
-    controls
-    preload="metadata"
-  >
-    <source src="https://persiancryptosource.com/video/users/feedback.mp4" type="video/mp4" />
-    مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
-  </video>
-</div>
 
 
 

@@ -1241,7 +1241,7 @@ useEffect(() => {
       )}
 
       <style jsx global>{`
-        .message-bubble {
+       .message-bubble {
           background-color: transparent;
           color: ${isDarkMode ? '#fff' : '#1f2937'};
           border: 2px solid rgba(247, 213, 93, 0.5);
@@ -1256,6 +1256,10 @@ useEffect(() => {
           -webkit-user-select: none;
           -moz-user-select: none;
           -ms-user-select: none;
+          word-wrap: break-word;
+          word-break: break-word;
+          overflow-wrap: break-word;
+          hyphens: auto;
         }
 
         .message-image {

@@ -1,4 +1,4 @@
-// components/VideoPlayer.js - نسخه بهینه‌سازی شده برای WebView اندروید
+// components/VideoPlayer.js - نسخه بهینه‌سازی شده برای WebView اندروید و iOS
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 
@@ -8,25 +8,107 @@ const VideoPlayer = ({ videoUrl, title, isDarkMode, onClose }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
+const [isMuted, setIsMuted] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showSpeedOptions, setShowSpeedOptions] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [buffered, setBuffered] = useState([]);
+  const [videoError, setVideoError] = useState(null);
+  const [isIOS, setIsIOS] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState(videoUrl);
+  const [fallbackUrls] = useState([
+    videoUrl,
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+    'https://www.w3schools.com/html/mov_bbb.mp4'
+  ]);
+  const [urlIndex, setUrlIndex] = useState(0);
 
+  const [loadingProgress, setLoadingProgress] = useState(0);
+const [isLargeFile, setIsLargeFile] = useState(false);
   const controlsTimeoutRef = useRef(null);
+
+
+  // تابع بررسی اندازه فایل
+const checkFileSize = async (url) => {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    const contentLength = response.headers.get('content-length');
+    const fileSizeMB = contentLength ? parseInt(contentLength) / (1024 * 1024) : 0;
+    
+    console.log(`File size: ${fileSizeMB.toFixed(2)} MB`);
+    
+    if (fileSizeMB > 300) { // اگر بیشتر از 300 مگابایت بود
+      setIsLargeFile(true);
+    }
+    
+    return fileSizeMB;
+  } catch (error) {
+    console.error('Error checking file size:', error);
+    return 0;
+  }
+};
+
+  // تشخیص iOS
+  useEffect(() => {
+    const userAgent = navigator.userAgent;
+    const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) || 
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIOS(isIOSDevice);
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const handleTimeUpdate = () => setCurrentTime(video.currentTime);
-    const handleLoadMetadata = () => setDuration(video.duration);
+    const handleLoadMetadata = () => {
+      setDuration(video.duration);
+      console.log('Video metadata loaded:', video.duration);
+    };
     const handleWaiting = () => setIsBuffering(true);
-    const handlePlaying = () => setIsBuffering(false);
+    const handlePlaying = () => {
+      setIsBuffering(false);
+      setIsPlaying(true);
+    };
+    const handlePause = () => setIsPlaying(false);
     const handleSeeked = () => setIsBuffering(false);
+    const handleCanPlay = () => {
+      setIsBuffering(false);
+      console.log('Video can play');
+    };
+    const handleLoadStart = () => {
+      console.log('Video load started');
+      setIsBuffering(true);
+    };
+    const handleLoadedData = () => {
+      console.log('Video data loaded');
+      setIsBuffering(false);
+    };
+    const handleError = (e) => {
+      console.error('Video error:', e.target.error);
+      
+      // سعی در استفاده از URL بعدی
+      if (urlIndex < fallbackUrls.length - 1) {
+        const nextIndex = urlIndex + 1;
+        console.log(`Trying fallback URL ${nextIndex}:`, fallbackUrls[nextIndex]);
+        setUrlIndex(nextIndex);
+        setCurrentVideoUrl(fallbackUrls[nextIndex]);
+        setVideoError(null);
+        // کمی تأخیر برای اجتناب از loop سریع
+        setTimeout(() => {
+          if (video) {
+            video.load();
+          }
+        }, 1000);
+      } else {
+        setVideoError(e.target.error);
+        setIsBuffering(false);
+      }
+    };
     const handleProgress = () => {
       const buffered = video.buffered;
       const bufferedRanges = [];
@@ -39,11 +121,17 @@ const VideoPlayer = ({ videoUrl, title, isDarkMode, onClose }) => {
       setBuffered(bufferedRanges);
     };
 
+    // Event listeners
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('loadedmetadata', handleLoadMetadata);
     video.addEventListener('waiting', handleWaiting);
     video.addEventListener('playing', handlePlaying);
+    video.addEventListener('pause', handlePause);
     video.addEventListener('seeked', handleSeeked);
+    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('loadstart', handleLoadStart);
+    video.addEventListener('loadeddata', handleLoadedData);
+    video.addEventListener('error', handleError);
     video.addEventListener('progress', handleProgress);
 
     return () => {
@@ -51,7 +139,12 @@ const VideoPlayer = ({ videoUrl, title, isDarkMode, onClose }) => {
       video.removeEventListener('loadedmetadata', handleLoadMetadata);
       video.removeEventListener('waiting', handleWaiting);
       video.removeEventListener('playing', handlePlaying);
+      video.removeEventListener('pause', handlePause);
       video.removeEventListener('seeked', handleSeeked);
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('loadstart', handleLoadStart);
+      video.removeEventListener('loadeddata', handleLoadedData);
+      video.removeEventListener('error', handleError);
       video.removeEventListener('progress', handleProgress);
     };
   }, []);
@@ -89,35 +182,51 @@ const VideoPlayer = ({ videoUrl, title, isDarkMode, onClose }) => {
     setShowControls(true);
   };
 
-  const togglePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
+  const handleUserInteraction = () => {
+    setHasUserInteracted(true);
+  };
 
+const togglePlay = async () => {
+  const video = videoRef.current;
+  if (!video) return;
+
+  if (!hasUserInteracted) {
+    setHasUserInteracted(true);
+  }
+
+  try {
     if (video.paused) {
-      // ابتدا بی‌صدا پخش می‌کنیم برای سازگاری با WebView
+      // برای iOS ابتدا با muted پخش می‌کنیم
       video.muted = true;
+      setIsMuted(true);
       
-      video.play()
-        .then(() => {
-          setIsPlaying(true);
-          // سپس سعی می‌کنیم صدا را برگردانیم
-          setTimeout(() => {
-            if (!isMuted) {
-              video.muted = false;
-            }
-          }, 300);
-        })
-        .catch((error) => {
-          console.error('Error playing video:', error);
-          // تلاش دوباره در حالت بی‌صدا
-          video.muted = true;
-          video.play().catch(e => console.error('Still cannot play video:', e));
-        });
+      if (video.readyState === 0) {
+        video.load();
+      }
+      
+      const playPromise = video.play();
+      
+      if (playPromise !== undefined) {
+        await playPromise;
+        setIsPlaying(true);
+        
+        // پس از 500ms صدا را روشن می‌کنیم
+        setTimeout(() => {
+          if (video && !video.paused) {
+            video.muted = false;
+            setIsMuted(false);
+          }
+        }, 500);
+      }
     } else {
       video.pause();
       setIsPlaying(false);
     }
-  };
+  } catch (error) {
+    console.error('Play/pause failed:', error);
+    setVideoError({ code: 999, message: 'پخش ویدیو امکان‌پذیر نیست' });
+  }
+};
 
   const handleSeek = (e) => {
     const time = e.target.value;
@@ -146,58 +255,113 @@ const VideoPlayer = ({ videoUrl, title, isDarkMode, onClose }) => {
   };
 
   const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
     const minutes = Math.floor(seconds / 60);
     seconds = Math.floor(seconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-// فقط آماده‌سازی ویدیو بدون پخش خودکار
-useEffect(() => {
-  const video = videoRef.current;
-  if (video) {
-    // فقط آماده‌سازی ویدیو بدون شروع پخش خودکار
-    video.load();
-  }
-}, []);
-
-// اضافه کردن مدیریت دکمه بک برای VideoPlayer  
+ // مدیریت دکمه بک
 useEffect(() => {
   const handleBackButton = (event) => {
     event.preventDefault();
-    onClose(); // دقیقاً مثل کلیک روی دکمه X عمل می‌کند
+    onClose();
   };
 
-  // اطلاع‌رسانی به React Native که VideoPlayer باز شده
-  window.postMessage(JSON.stringify({
-    type: 'VIDEO_PLAYER_OPENED'
-  }), '*');
+  // تنظیم تعامل کاربر بلافاصله
+  setHasUserInteracted(true);
+
+  if (window.postMessage) {
+    window.postMessage(JSON.stringify({
+      type: 'VIDEO_PLAYER_OPENED'
+    }), '*');
+  }
   
-  // اضافه کردن یک state جدید به تاریخچه برای ویدیو
   window.history.pushState({ videoPlayer: true }, '');
-  
-  // شنونده برای رویداد popstate (فشردن دکمه برگشت)
   window.addEventListener('popstate', handleBackButton);
   
-  // پاکسازی event listener
   return () => {
     window.removeEventListener('popstate', handleBackButton);
     
-    // اطلاع‌رسانی به React Native که VideoPlayer بسته شده
-    window.postMessage(JSON.stringify({
-      type: 'VIDEO_PLAYER_CLOSED'
-    }), '*');
+    if (window.postMessage) {
+      window.postMessage(JSON.stringify({
+        type: 'VIDEO_PLAYER_CLOSED'
+      }), '*');
+    }
   };
 }, [onClose]);
+
+  useEffect(() => {
+  const video = videoRef.current;
+  if (!video || !isIOS) return;
+
+  const handleLoadedData = () => {
+    if (hasUserInteracted && video.paused) {
+      video.play().catch(console.error);
+    }
+  };
+
+  video.addEventListener('loadeddata', handleLoadedData);
+  
+  return () => {
+    video.removeEventListener('loadeddata', handleLoadedData);
+  };
+}, [hasUserInteracted, isIOS]);
+
+// useEffect برای بررسی اندازه فایل
+useEffect(() => {
+  if (currentVideoUrl) {
+    checkFileSize(currentVideoUrl);
+  }
+}, [currentVideoUrl]);
+
+// useEffect برای tracking پیشرفت بارگذاری
+useEffect(() => {
+  const video = videoRef.current;
+  if (!video) return;
+
+  const handleProgress = () => {
+    const buffered = video.buffered;
+    const duration = video.duration;
+    
+    if (buffered.length > 0 && duration > 0) {
+      const loadedEnd = buffered.end(buffered.length - 1);
+      const progress = (loadedEnd / duration) * 100;
+      setLoadingProgress(progress);
+    }
+  };
+
+  video.addEventListener('progress', handleProgress);
+  
+  return () => {
+    video.removeEventListener('progress', handleProgress);
+  };
+}, []);
+
+  // تابع retry برای بارگذاری مجدد ویدیو
+  const retryVideo = () => {
+    console.log('Retrying video load...');
+    setVideoError(null);
+    setIsBuffering(true);
+    setUrlIndex(0);
+    setCurrentVideoUrl(fallbackUrls[0]);
+    const video = videoRef.current;
+    if (video) {
+      video.load();
+    }
+  };
 
   return (
     <div
       className={`fixed inset-0 z-50 ${isDarkMode ? 'bg-black' : 'bg-white'}`}
       onMouseMove={handleMouseMove}
-      dir="ltr" // Force LTR direction for video player
-      style={{ direction: 'ltr' }} // Double ensure LTR
+      onClick={handleUserInteraction}
+      onTouchStart={handleUserInteraction}
+      dir="ltr"
+      style={{ direction: 'ltr' }}
     >
       <div className="relative h-full">
-        {/* Close Button - Left side */}
+        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-14 left-7 z-[9999] flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500 hover:bg-yellow-600"
@@ -205,31 +369,86 @@ useEffect(() => {
           <X size={20} className="text-black" />
         </button>
 
-        {/* Video - اضافه کردن ویژگی‌های اضافی برای سازگاری با WebView */}
-        <video
+        {/* Video */}
+      <video
   ref={videoRef}
-  src={videoUrl}
+  src={currentVideoUrl}
   className="w-full h-full object-contain"
-  onClick={togglePlay}
+  // onClick={togglePlay} را حذف کنید
+  // onTouchEnd={togglePlay} را حذف کنید
   playsInline
   webkit-playsinline="true"
   x5-playsinline="true"
+  x5-video-player-type="h5-page"
+  x5-video-player-fullscreen="true"
   controls={false}
-  preload="auto"
+preload={isLargeFile ? "none" : "metadata"}
   disablePictureInPicture
-  // اضافه شده برای رفع مشکل در WebView
-  style={{
-    backgroundColor: '#000',
-    zIndex: 1
-  }}
-/>
+muted={true}
+  crossOrigin="anonymous"
+          style={{
+            backgroundColor: '#000',
+            zIndex: 1
+          }}
+        />
 
-        {/* Buffering Indicator */}
-        {isBuffering && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-yellow-500 border-t-transparent" />
+        {/* Error Message */}
+        {videoError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-20">
+            <div className="text-white text-center p-4 max-w-sm">
+              <p className="mb-4 text-lg">خطا در بارگذاری ویدیو</p>
+              <p className="text-sm text-gray-300 mb-4">
+                {isIOS ? 
+                  'ممکن است به دلیل محدودیت‌های شبکه یا فرمت ویدیو باشد' :
+                  `کد خطا: ${videoError.code} - ${videoError.message}`
+                }
+              </p>
+              <p className="text-xs text-gray-400 mb-4">
+                URL فعلی: {urlIndex + 1} از {fallbackUrls.length}
+              </p>
+              <div className="space-y-2">
+                <button
+                  onClick={retryVideo}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded-lg font-medium"
+                >
+                  تلاش مجدد
+                </button>
+                <br />
+                <button
+                  onClick={onClose}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium"
+                >
+                  بستن
+                </button>
+              </div>
+            </div>
           </div>
         )}
+
+        {/* Buffering Indicator */}
+{isBuffering && !videoError && (
+  <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
+    <div className="text-white text-center p-4 max-w-sm">
+      <div className="animate-spin rounded-full h-12 w-12 border-4 border-yellow-500 border-t-transparent mb-4 mx-auto" />
+      <p className="text-lg mb-2">در حال بارگذاری ویدیو...</p>
+      {isLargeFile && (
+        <p className="text-sm text-gray-300 mb-4">
+          فایل حجیم است، کمی صبر کنید
+        </p>
+      )}
+      {loadingProgress > 0 && (
+        <div className="w-full bg-gray-600 rounded-full h-2 mt-4">
+          <div 
+            className="bg-yellow-500 h-2 rounded-full transition-all duration-300" 
+            style={{ width: `${Math.min(loadingProgress, 100)}%` }}
+          ></div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+
 
         {/* Video Controls */}
         {showControls && (
@@ -240,21 +459,16 @@ useEffect(() => {
             </div>
 
             {/* Play/Pause Center Button */}
-            <button
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white/80 hover:text-white z-30"
-              onClick={togglePlay}
-            >
-              {isPlaying ? (
-                <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                </svg>
-              ) : (
-                <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              )}
-            </button>
-
+{hasUserInteracted && !isPlaying && (
+  <button
+    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 w-20 h-20 rounded-full bg-yellow-500/90 hover:bg-yellow-600/90 flex items-center justify-center shadow-lg transition-colors"
+    onClick={togglePlay}
+  >
+    <svg className="w-8 h-8 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  </button>
+)}
             {/* Bottom Controls */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent z-30">
               {/* Progress Bar */}
@@ -262,15 +476,15 @@ useEffect(() => {
                 <div className="relative w-full h-1 bg-white/30 rounded-full">
                   <div
                     className="absolute top-0 left-0 h-1 bg-yellow-500 rounded-full"
-                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                    style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                   />
                   {buffered.map((range, index) => (
                     <div
                       key={index}
                       className="absolute top-0 h-1 bg-white/50 rounded-full"
                       style={{
-                        left: `${(range.start / duration) * 100}%`,
-                        width: `${((range.end - range.start) / duration) * 100}%`,
+                        left: `${duration > 0 ? (range.start / duration) * 100 : 0}%`,
+                        width: `${duration > 0 ? ((range.end - range.start) / duration) * 100 : 0}%`,
                       }}
                     />
                   ))}

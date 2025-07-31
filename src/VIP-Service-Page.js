@@ -17,7 +17,9 @@ const VIPPage = ({ isDarkMode, isOpen, onClose }) => {
   const [renewingProduct, setRenewingProduct] = useState(null);
   const [hasVIPSubscription, setHasVIPSubscription] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const [videoUrl, setVideoUrl] = useState('https://persiancryptosource.com/video//earn/vip.mp4'); // آدرس ویدیو پیش‌فرض
+  const [isIOS, setIsIOS] = useState(false);
+
+const [videoUrl, setVideoUrl] = useState('https://persiancryptosource.com/video/learn/vip.mp4');
 
   useEffect(() => {
     // بررسی آیا کاربر در حال تمدید اشتراک است یا خیر
@@ -101,6 +103,18 @@ const VIPPage = ({ isDarkMode, isOpen, onClose }) => {
     
     checkVIPStatus();
   }, []);
+
+  // این useEffect را بعد از سایر useEffect ها اضافه کنید:
+useEffect(() => {
+  const userAgent = navigator.userAgent;
+  const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  setIsIOS(isIOSDevice);
+  
+  // تست لاگ برای دیباگ
+  console.log('Device detected:', isIOSDevice ? 'iOS' : 'Other');
+  console.log('Video URL:', videoUrl);
+}, [videoUrl]);
 
   const closeCard = useCallback(() => {
     setIsExiting(true);
@@ -224,10 +238,13 @@ const handlePurchase = (subscription) => {
                 
               {/* Play Button Overlay */}
 <div className="absolute inset-0 flex items-center justify-center">
-  <button 
-    onClick={() => setShowVideo(true)}
-    className="w-16 h-16 rounded-full bg-white/70 flex items-center justify-center z-10 hover:bg-white/90 transition-colors"
-  >
+ <button 
+  onClick={() => {
+    console.log('Play button clicked, Video URL:', videoUrl);
+    setShowVideo(true);
+  }}
+  className="w-16 h-16 rounded-full bg-white/70 flex items-center justify-center z-10 hover:bg-white/90 transition-colors shadow-lg"
+>
     <Play size={36} className="text-black-500 ml-1" />
   </button>
 </div>

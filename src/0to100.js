@@ -159,7 +159,7 @@ const episodes = [
     id: 19, 
     title: "مونتوم",
     duration: "44 دقیقه",
-    videoUrl: "hhttps://persiancryptosource.com/video/0to100/Momentum_Analysis.mp4"
+    videoUrl: "https://persiancryptosource.com/video/0to100/Momentum_Analysis.mp4"
   },
 
 ];

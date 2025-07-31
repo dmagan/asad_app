@@ -219,6 +219,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl }) => {
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
         
+        
         // محاسبه تغییر موقعیت
         const scaleChange = newScale / scale;
         const newPosition = {
@@ -524,6 +525,191 @@ images.forEach(img => {
   }
 });
 
+
+// پردازش متن‌های قابل کپی
+const processText = (element) => {
+  const walker = document.createTreeWalker(
+    element,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false
+  );
+
+  const textNodes = [];
+  let node;
+  while (node = walker.nextNode()) {
+    textNodes.push(node);
+  }
+
+  textNodes.forEach(textNode => {
+    const text = textNode.textContent;
+    const regex = />>(.*?)<</g;
+    
+    if (regex.test(text)) {
+      const fragment = document.createDocumentFragment();
+      let lastIndex = 0;
+      
+      text.replace(/>>(.*?)<</g, (match, content, index) => {
+        if (index > lastIndex) {
+          fragment.appendChild(document.createTextNode(text.slice(lastIndex, index)));
+        }
+        
+        const copyableSpan = document.createElement('span');
+        copyableSpan.className = 'copyable-text';
+
+        // ساخت محتوا با آیکون
+        const contentSpan = document.createElement('span');
+        contentSpan.textContent = content;
+
+        const iconSpan = document.createElement('span');
+        iconSpan.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; vertical-align: middle;"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="m4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+
+        copyableSpan.appendChild(contentSpan);
+        copyableSpan.appendChild(iconSpan);
+        
+        copyableSpan.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          try {
+            const success = await copyTextFallback(content);
+            
+            if (success) {
+              copyableSpan.style.background = '#4ade80';
+              setTimeout(() => {
+                copyableSpan.style.background = 'linear-gradient(135deg, #f7d55d, #fbbf24)';
+              }, 500);
+
+              showCopyToast('متن کپی شد در حافظه ✓', '#4ade80');
+            } else {
+              throw new Error('Copy failed');
+            }
+            
+          } catch (err) {
+            console.error('خطا در کپی:', err);
+            showCopyToast('خطا در کپی کردن', '#ef4444');
+          }
+        };
+
+        // تابع کپی قدرتمند
+        async function copyTextFallback(text) {
+          try {
+            if (navigator.clipboard && window.isSecureContext) {
+              await navigator.clipboard.writeText(text);
+              return true;
+            }
+          } catch (err) {
+            console.log('Clipboard API failed:', err);
+          }
+          
+          try {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            
+            textArea.style.cssText = `
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 2em;
+              height: 2em;
+              padding: 0;
+              border: none;
+              outline: none;
+              boxShadow: none;
+              background: transparent;
+              fontSize: 16px;
+              opacity: 0;
+              zIndex: -1000;
+            `;
+            
+            textArea.setAttribute('readonly', '');
+            textArea.setAttribute('contenteditable', 'true');
+            
+            document.body.appendChild(textArea);
+            
+            textArea.focus();
+            textArea.select();
+            textArea.setSelectionRange(0, 99999);
+            
+            let success = false;
+            
+            try {
+              success = document.execCommand('copy');
+            } catch (e) {}
+            
+            if (!success) {
+              try {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(textArea);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                success = document.execCommand('copy');
+                selection.removeAllRanges();
+              } catch (e) {}
+            }
+            
+            if (!success) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+              try {
+                textArea.select();
+                textArea.setSelectionRange(0, 99999);
+                success = document.execCommand('copy');
+              } catch (e) {}
+            }
+            
+            document.body.removeChild(textArea);
+            return success;
+            
+          } catch (err) {
+            console.log('Fallback method failed:', err);
+            return false;
+          }
+        }
+
+        // تابع نمایش پیام
+        function showCopyToast(message, bgColor) {
+          const toast = document.createElement('div');
+          toast.textContent = message;
+          toast.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: ${bgColor};
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: copyFadeInOut 2s ease-in-out forwards;
+          `;
+
+          document.body.appendChild(toast);
+          setTimeout(() => {
+            if (toast.parentNode) {
+              document.body.removeChild(toast);
+            }
+          }, 2000);
+        }
+        
+        fragment.appendChild(copyableSpan);
+        lastIndex = index + match.length;
+        return match;
+      });
+      
+      if (lastIndex < text.length) {
+        fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+      }
+      
+      textNode.parentNode.replaceChild(fragment, textNode);
+    }
+  });
+};
+
+processText(doc.body);
 // پاک کردن observer در cleanup
 
    if (messageRef.current) {
@@ -535,17 +721,37 @@ images.forEach(img => {
      // اضافه کردن event listener بعد از appendChild
      const videoTriggers = messageRef.current.querySelectorAll('.video-play-trigger');
      videoTriggers.forEach(trigger => {
-       trigger.addEventListener('click', (e) => {
-         e.preventDefault();
-         e.stopPropagation();
-         
-         const videoSrc = trigger.getAttribute('data-video-src');
-         const videoTitle = trigger.getAttribute('data-video-title');
-         
-         if (videoSrc && onVideoClick) {
-           onVideoClick(videoSrc, videoTitle);
-         }
-       });
+       // برای iOS Safari بهتر است از touchend استفاده کنیم
+const handleVideoClick = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  const videoSrc = trigger.getAttribute('data-video-src');
+  const videoTitle = trigger.getAttribute('data-video-title');
+  
+  if (videoSrc && onVideoClick) {
+    // اضافه کردن کمی تأخیر برای iOS
+    setTimeout(() => {
+      onVideoClick(videoSrc, videoTitle);
+    }, 100);
+  }
+};
+
+trigger.addEventListener('click', handleVideoClick);
+trigger.addEventListener('touchend', handleVideoClick);
+
+// اضافه کردن touchend برای iOS
+trigger.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  const videoSrc = trigger.getAttribute('data-video-src');
+  const videoTitle = trigger.getAttribute('data-video-title');
+  
+  if (videoSrc && onVideoClick) {
+    onVideoClick(videoSrc, videoTitle);
+  }
+});
      });
    }
     return () => {
@@ -879,6 +1085,8 @@ useEffect(() => {
     }
   };
 }, [posts]);
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1062,23 +1270,70 @@ useEffect(() => {
 )}
 
       <style jsx global>{`
-  .message-bubble {
-    background-color: transparent;
-    color: ${isDarkMode ? '#fff' : '#1f2937'};
-    border: 2px solid rgba(247, 213, 93, 0.5);
-    border-radius: 24px;
-    border-top-right-radius: 4px;
-    padding: 1rem;
-    max-width: 80%;
-    direction: rtl;
-    text-align: right;
-    position: relative;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
+ .message-bubble {
+  background-color: transparent;
+  color: ${isDarkMode ? '#fff' : '#1f2937'};
+  border: 2px solid rgba(247, 213, 93, 0.5);
+  border-radius: 24px;
+  border-top-right-radius: 4px;
+  padding: 1rem;
+  max-width: 80%;
+  direction: rtl;
+  text-align: right;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  word-wrap: break-word; /* برای سازگاری با مرورگرهای قدیمی */
+}
 
+.copyable-text {
+  background: linear-gradient(135deg, #f7d55d, #fbbf24);
+  color: #1f2937;
+  padding: 2px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-block;
+  margin: 0 2px;
+  transition: all 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.copyable-text:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.copyable-text:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+@keyframes copyFadeInOut {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}
   /* بهبود کارایی تصاویر */
 .message-image {
   will-change: auto;
