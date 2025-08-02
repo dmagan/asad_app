@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PaymentCard from './PaymentCard';
 import LoginPage from './LoginPage';
 import { PRODUCT_PRICES } from './config';
+import { CircleArrowLeft } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+
+
 
 const BuyPage = ({ isDarkMode }) => {
   const navigate = useNavigate();
@@ -10,12 +14,55 @@ const BuyPage = ({ isDarkMode }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginPage, setShowLoginPage] = useState(false);
+  const [searchParams] = useSearchParams();
+const [highlightProduct, setHighlightProduct] = useState(null);
+const productRefs = useRef({});
+  
+
+
+  // تابع برای برگشت به صفحه قبلی
+const handleGoBack = () => {
+  if (window.history.length > 1) {
+    navigate(-1); // برگشت به صفحه قبلی
+  } else {
+    navigate('/'); // اگر تاریخچه وجود نداشت، به صفحه اصلی برو
+  }
+};
 
   // بررسی وضعیت لاگین
   useEffect(() => {
     const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
     setIsLoggedIn(!!token);
   }, []);
+
+
+// بررسی URL parameter و highlight کردن محصول
+useEffect(() => {
+  const productParam = searchParams.get('product');
+  if (productParam) {
+    setHighlightProduct(productParam);
+    
+    // اسکرول به محصول مورد نظر - بهینه شده برای اندروید
+setTimeout(() => {
+  const productElement = productRefs.current[productParam];
+  if (productElement) {
+    productElement.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center',
+      inline: 'nearest'
+    });
+    
+    // اسکرول اضافی برای جبران sticky header
+  
+  }
+}, 1000);
+    
+    // حذف highlight بعد از 3 ثانیه
+    setTimeout(() => {
+      setHighlightProduct(null);
+    }, 3000);
+  }
+}, [searchParams]);
 
   // لیست محصولات
   const products = [
@@ -89,18 +136,35 @@ const BuyPage = ({ isDarkMode }) => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
-      {/* Header */}
+      {/* Header */}{/* Header */}
 <div className={`sticky top-0 z-20 ${
   isDarkMode 
     ? 'bg-gradient-to-b from-gray-800 to-gray-900' 
     : 'bg-gradient-to-b from-white to-gray-100'
 }`}>
-        <div className="flex items-center justify-center p-2">
-          <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-یک بار برای همیشه با ضرر خداحافظی کن
-          </h1>
-        </div>
-         </div>
+  <div className="flex items-center justify-between p-2">
+    {/* دکمه برگشت */}
+
+    <button
+      onClick={handleGoBack}
+      className={`p-2 rounded-full transition-colors ${
+        isDarkMode 
+          ? 'text-white hover:bg-gray-700' 
+          : 'text-gray-900 hover:bg-gray-200'
+      }`}
+    >
+      <CircleArrowLeft size={32} />
+    </button>
+    
+    <div className="px-4 ">
+  <p className={`text-center text-xl  leading-relaxed ${isDarkMode ? 'text-white' : 'text-gray-900'}`} dir="rtl">
+سلام به صفحه پرداخت خوش آمدید</p>
+</div>
+
+    {/* فضای خالی برای تراز کردن عنوان در وسط */}
+    <div className="w-10 h-10"></div>
+  </div>
+</div>
 {/* Shop Image */}  
 <div className="pb-2 relative">
   <div className="w-full relative">
@@ -112,9 +176,12 @@ const BuyPage = ({ isDarkMode }) => {
   </div>
 </div>
 {/* Text under image */}
-<div className="px-4 pb-4 ">
-  <p className={`text-center  leading-relaxed ${isDarkMode ? 'text-white' : 'text-gray-900'}`} dir="rtl">
-    من اسد هستم. سالها تجربه در بازار کریپتو، راهی که خودم رفتم را حالا به ساده‌ترین شکل برات آموزش میدم. از صفر تا درآمد ماهانه عالی
+<div className="px-4">
+  <p className={`text-center leading-relaxed ${isDarkMode ? 'text-white' : 'text-gray-900'}`} dir="rtl">
+    <span className="text-lg font-bold">نکته :</span> خدمات مورد نظر را روش کلیک کنید و بعد اول حتما
+    <span className="text-lg font-bold mx-1">ثبت نام کنید</span>
+    (ایمیل آدرس و اسم خودتان را وارد کنید)، بعد می‌توانین خدمات مورد نظر را خریداری کنید.
+    اگر مشکلی داشتید <span className="text-lg font-bold">با تیم پشتیبانی ما</span> ارتباط بگیرین.
   </p>
 </div>
 
@@ -125,36 +192,41 @@ const BuyPage = ({ isDarkMode }) => {
       {/* Products List */}
       <div className="p-4">
         <div className="grid grid-cols-1 gap-4" dir="rtl">
-          {products.map((product) => (
-            <div 
-              key={product.id}
-              onClick={() => handleProductSelect(product)}
-              className={`p-4 rounded-2xl flex items-center gap-3 border-2 cursor-pointer hover:opacity-80 transition-opacity ${
-                isDarkMode ? 'border-gray-700 text-white' : 'border-gray-200 text-gray-900'
-              }`}
-            >
-              <div className="w-16 h-16 rounded-xl flex items-center justify-center">
-                <img 
-                  src={product.imageSrc} 
-                  alt={product.title} 
-                  className="w-full h-full object-cover rounded-lg" 
-                />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className={`font-medium text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {product.title}
-                  </h3>
-                  <span className={`font-black text-xl ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                    ${product.price}
-                  </span>
-                </div>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {product.description}
-                </p>
-              </div>
-            </div>
-          ))}
+    {products.map((product) => (
+  <div 
+    key={product.id}
+    ref={(el) => productRefs.current[product.id] = el}
+    onClick={() => handleProductSelect(product)}
+className={`p-4 rounded-2xl flex items-center gap-3 border-2 cursor-pointer hover:opacity-80 transition-all duration-150 ${
+      isDarkMode ? 'border-gray-700 text-white' : 'border-gray-200 text-gray-900'
+    } ${
+      highlightProduct === product.id 
+? 'ring-4 ring-yellow-400 border-yellow-400 shadow-lg transform scale-100 animate-[pulse_1.5s_ease-in-out_2]'
+        : ''
+    }`}
+  >
+    <div className="w-16 h-16 rounded-xl flex items-center justify-center">
+      <img 
+        src={product.imageSrc} 
+        alt={product.title} 
+        className="w-full h-full object-cover rounded-lg" 
+      />
+    </div>
+    <div className="flex-1">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className={`font-medium text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          {product.title}
+        </h3>
+        <span className={`font-black text-xl ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+          ${product.price}
+        </span>
+      </div>
+      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+        {product.description}
+      </p>
+    </div>
+  </div>
+))}
           
 
 
