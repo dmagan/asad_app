@@ -42,6 +42,8 @@ import newSupportNotificationService from './NewSupportNotificationService';
 import MimCoinChannel from './MimCoinChannel';
 import MimCoinServicesPage from './MimCoin-Services-Page';
 import BuyPage from './BuyPage';
+import firebaseNotificationService from './firebaseNotification';
+
 
 
 
@@ -875,8 +877,42 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [unreadSupportMessages, setUnreadSupportMessages] = useState(0);
   const [unreadNewSupportMessages, setUnreadNewSupportMessages] = useState(0);
+    const [firebaseInitialized, setFirebaseInitialized] = useState(false);
 
+// -------- Firebase Push Initialization --------
+useEffect(() => {
+  const setupFirebasePush = async () => {
+    try {
+      console.log('Starting Firebase Push setup...');
+      
+      // اول service worker رو register کن و منتظر بمان
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        console.log('Service Worker registered successfully:', registration);
+        
+        // مطمئن شو که service worker آماده است
+        await navigator.serviceWorker.ready;
+        console.log('Service Worker is ready');
+      }
+      
+      // بعد Firebase رو initialize کن
+      const initialized = await firebaseNotificationService.initialize();
+      if (!initialized) {
+        console.error('Firebase initialization failed');
+        return;
+      }
+      
+      console.log('Firebase initialized successfully');
+      setFirebaseInitialized(true); // این خط را اضافه کنید
+      
+      
+    } catch (err) {
+      console.error('Firebase Push setup error:', err);
+    }
+  };
   
+  setupFirebasePush();
+}, []);
 
 useEffect(() => {
   // فقط یک بار در لود اولیه چک می‌کنیم
@@ -1389,6 +1425,30 @@ useEffect(() => {
   }
 }, []);
 
+
+// تابع فعال‌سازی اعلان‌ها با User Gesture
+const handleEnableNotifications = async () => {
+  if (!firebaseInitialized) {
+    alert('Firebase هنوز آماده نیست. لطفاً کمی صبر کنید.');
+    return;
+  }
+  
+  try {
+    const token = await firebaseNotificationService.requestPermission();
+    if (token) {
+      // فعال‌سازی پیام‌های foreground
+      firebaseNotificationService.setupForegroundMessaging();
+      alert('اعلان‌ها با موفقیت فعال شدند!');
+    } else {
+      alert('مجوز اعلان صادر نشد یا مرورگر شما پشتیبانی نمی‌کند.');
+    }
+  } catch (error) {
+    console.error('خطا در فعال‌سازی اعلان‌ها:', error);
+    alert('خطا در فعال‌سازی اعلان‌ها. لطفاً دوباره تلاش کنید.');
+  }
+};
+
+
 return (
   <ErrorBoundary isDarkMode={isDarkMode}>
     <div>
@@ -1403,6 +1463,21 @@ return (
         <DesktopWarning isDarkMode={isDarkMode} />
       )}
 
+  {/* دکمه فعال‌سازی اعلان‌ها - این بخش را اضافه کنید */}
+      {firebaseInitialized && isLoggedIn && (
+        <div className="fixed top-4 left-4 z-50">
+          <button
+            onClick={handleEnableNotifications}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              isDarkMode 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            فعال‌سازی اعلان‌ها
+          </button>
+        </div>
+      )}
       <BrowserRouter>
         <OrientationLock isDarkMode={isDarkMode}>
           <Routes>

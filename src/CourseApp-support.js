@@ -20,6 +20,8 @@ import TicketAnswer from './TicketAnswer';
 import MimCoinServicesPage from './MimCoin-Services-Page';
 import MimCoinChannel from './MimCoinChannel';
 import newSupportNotificationService from './NewSupportNotificationService';
+import firebaseNotificationService from './firebaseNotification';
+
 
 
 
@@ -1241,6 +1243,16 @@ useEffect(() => {
     setUnreadNewSupportMessages(0);
   }
 }, [isLoggedIn]);
+
+
+useEffect(() => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      .then(() => {
+        firebaseNotificationService.initialize();
+      });
+  }
+}, []);
 
 const handleSignalStreamClick = async () => {
   // نمایش وضعیت لودینگ
