@@ -21,6 +21,8 @@ import MimCoinServicesPage from './MimCoin-Services-Page';
 import MimCoinChannel from './MimCoinChannel';
 import newSupportNotificationService from './NewSupportNotificationService';
 import firebaseNotificationService from './firebaseNotification';
+import SettingsPage from './SettingsPage';
+
 
 
 
@@ -197,6 +199,8 @@ const [showTicketAnswer, setShowTicketAnswer] = useState(false);
 const [showMimCoinPage, setShowMimCoinPage] = useState(false);
 const [showMimCoinChannel, setShowMimCoinChannel] = useState(false);
 const [unreadNewSupportMessages, setUnreadNewSupportMessages] = useState(0);
+const [showSettingsPage, setShowSettingsPage] = useState(false);
+
 
 
 
@@ -497,7 +501,11 @@ const handleVIPClick = async () => {
 
 
 
-
+const isIOSA2HS = () => {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  return isIOS && isStandalone;
+};
 
   const handleDexClick = () => {
     const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
@@ -1413,23 +1421,29 @@ const handleSignalStreamClick = async () => {
 
 {/* Header */}
 <div className={`px-6 py-4 flex items-center justify-between ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-{/* در قسمت Header */}
-{typeof window !== 'undefined' && window.ReactNativeWebView ? (
-  <button
-    onClick={() => {
-      if (window.sendMessageToNative) {
-        window.sendMessageToNative({
-          type: 'OPEN_SETTINGS'
-        });
-      }
-    }}
-    className={`p-2 rounded-full transition-all duration-200 hover:bg-opacity-10 hover:bg-gray-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
-  >
-    <Settings size={24} />
-  </button>
-) : (
-  <img src="/Logo-UpLeft.png" alt="Logo" className="h-8 w-auto" />
-)}
+  {isIOSA2HS() ? (
+    <button
+      onClick={() => setShowSettingsPage(true)}
+      className={`p-2 rounded-full transition-all duration-200 hover:bg-opacity-10 hover:bg-gray-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+    >
+      <Settings size={24} />
+    </button>
+  ) : typeof window !== 'undefined' && window.ReactNativeWebView ? (
+    <button
+      onClick={() => {
+        if (window.sendMessageToNative) {
+          window.sendMessageToNative({
+            type: 'OPEN_SETTINGS'
+          });
+        }
+      }}
+      className={`p-2 rounded-full transition-all duration-200 hover:bg-opacity-10 hover:bg-gray-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+    >
+      <Settings size={24} />
+    </button>
+  ) : (
+    <img src="/Logo-UpLeft.png" alt="Logo" className="h-8 w-auto" />
+  )}
   
   <span className={`text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>خانه</span>
   <ThemeSwitcher isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
@@ -2044,7 +2058,14 @@ const handleSignalStreamClick = async () => {
   />
 )}
 
-
+{/* Settings Page */}
+{showSettingsPage && (
+  <SettingsPage
+    isDarkMode={isDarkMode}
+    isOpen={showSettingsPage}
+    onClose={() => setShowSettingsPage(false)}
+  />
+)}
 
 
 

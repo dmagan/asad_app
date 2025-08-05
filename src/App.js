@@ -43,6 +43,8 @@ import MimCoinChannel from './MimCoinChannel';
 import MimCoinServicesPage from './MimCoin-Services-Page';
 import BuyPage from './BuyPage';
 import firebaseNotificationService from './firebaseNotification';
+import NotificationPromptCard from './NotificationPromptCard';
+
 
 
 
@@ -511,11 +513,16 @@ setUnreadSupportMessages={setUnreadSupportMessages}
               unreadSupportMessages={unreadSupportMessages}
 setUnreadSupportMessages={setUnreadSupportMessages} 
             />
+
+            {/*
+            
             <ProfilePage 
               isDarkMode={isDarkMode} 
               setIsLoggedIn={setIsLoggedIn}
               onLogout={handleLogout}
             />
+
+            */}
           </>
         ) : (
           <>
@@ -877,6 +884,7 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [unreadSupportMessages, setUnreadSupportMessages] = useState(0);
   const [unreadNewSupportMessages, setUnreadNewSupportMessages] = useState(0);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
     const [firebaseInitialized, setFirebaseInitialized] = useState(false);
 
 // -------- Firebase Push Initialization --------
@@ -1214,6 +1222,19 @@ useEffect(() => {
   }
 }, [isLoggedIn]);
   
+// نمایش کارت نوتیفیکیشن بعد از لاگین
+useEffect(() => {
+  if (isLoggedIn && firebaseInitialized) {
+    // بررسی که آیا هنوز از کاربر سوال نپرسیده و قبلاً dismiss نکرده
+    if (Notification.permission === 'default' && !localStorage.getItem('notificationDismissed')) {
+      setTimeout(() => {
+        setShowNotificationPrompt(true);
+      }, 2000); // 2 ثانیه بعد از لاگین
+    }
+  }
+}, [isLoggedIn, firebaseInitialized]);
+
+
   // دریافت قیمت‌های ارز دیجیتال
   useEffect(() => {
     const staticData = [
@@ -1429,24 +1450,61 @@ useEffect(() => {
 // تابع فعال‌سازی اعلان‌ها با User Gesture
 const handleEnableNotifications = async () => {
   if (!firebaseInitialized) {
-    alert('Firebase هنوز آماده نیست. لطفاً کمی صبر کنید.');
+    alert(' اعلانم ها هنوز آماده نیست. لطفاً کمی صبر کنید.');
     return;
   }
   
   try {
     const token = await firebaseNotificationService.requestPermission();
     if (token) {
-      // فعال‌سازی پیام‌های foreground
       firebaseNotificationService.setupForegroundMessaging();
+      setShowNotificationPrompt(false);
       alert('اعلان‌ها با موفقیت فعال شدند!');
     } else {
+      setShowNotificationPrompt(false);
+      alert('مجوز اعلان صادر نشد به قسمت تنیظیمات مراجعه فرمایید و طبق آموزش اعلان ها را فعال کنید.');
+    }
+  } catch (error) {
+    console.error('خطا در فعال‌سازی اعلان‌ها:', error);
+    setShowNotificationPrompt(false);
+    alert('خطا در فعال‌سازی اعلان‌ها. لطفاً دوباره تلاش کنید.');
+  }
+};
+
+
+const handleEnableNotificationsFromSettings = async () => {
+  if (!firebaseInitialized) {
+    alert('Firebase هنوز آماده نیست. لطفاً کمی صبر کنید.');
+    return false;
+  }
+  
+  try {
+    localStorage.removeItem('notificationDismissed');
+    const token = await firebaseNotificationService.requestPermission();
+    if (token) {
+      firebaseNotificationService.setupForegroundMessaging();
+      alert('اعلان‌ها با موفقیت فعال شدند!');
+      return true;
+    } else {
       alert('مجوز اعلان صادر نشد یا مرورگر شما پشتیبانی نمی‌کند.');
+      return false;
     }
   } catch (error) {
     console.error('خطا در فعال‌سازی اعلان‌ها:', error);
     alert('خطا در فعال‌سازی اعلان‌ها. لطفاً دوباره تلاش کنید.');
+    return false;
   }
 };
+
+const getNotificationStatus = () => {
+  return {
+    permission: Notification.permission,
+    isDismissed: localStorage.getItem('notificationDismissed') === 'true'
+  };
+};
+
+window.handleEnableNotificationsFromSettings = handleEnableNotificationsFromSettings;
+window.getNotificationStatus = getNotificationStatus;
 
 
 return (
@@ -1463,21 +1521,6 @@ return (
         <DesktopWarning isDarkMode={isDarkMode} />
       )}
 
-  {/* دکمه فعال‌سازی اعلان‌ها - این بخش را اضافه کنید */}
-      {firebaseInitialized && isLoggedIn && (
-        <div className="fixed top-4 left-4 z-50">
-          <button
-            onClick={handleEnableNotifications}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              isDarkMode 
-                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
-            }`}
-          >
-            فعال‌سازی اعلان‌ها
-          </button>
-        </div>
-      )}
       <BrowserRouter>
         <OrientationLock isDarkMode={isDarkMode}>
           <Routes>
@@ -1509,6 +1552,14 @@ return (
         </OrientationLock>
       </BrowserRouter>
     </div>
+    {/* Notification Prompt Card */}
+<NotificationPromptCard
+  isDarkMode={isDarkMode}
+  isOpen={showNotificationPrompt}
+  onClose={() => setShowNotificationPrompt(false)}
+  onEnable={handleEnableNotifications}
+/>
+
   </ErrorBoundary>
 );
   
