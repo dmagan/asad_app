@@ -85,57 +85,58 @@ class FirebaseNotificationService {
     }
   }
 
-  /**
-   * Retrieve the FCM token and send to server
-   */
-  async getToken() {
-    try {
-      const token = await getToken(this.messaging, { vapidKey: this.vapidKey });
-      if (token) {
-        await this.sendTokenToServer(token);
-        return token;
-      }
-      return null;
-    } catch (error) {
-      console.error('Token generation failed:', error);
-      return null;
+/**
+ * Retrieve the FCM token and send to server
+ */
+async getToken() {
+  try {
+    const token = await getToken(this.messaging, { vapidKey: this.vapidKey });
+    if (token) {
+      console.log('🔑 FCM Token received:', token);
+      await this.sendTokenToServer(token);
+      return token;
     }
+    return null;
+  } catch (error) {
+    console.error('❌ Token generation failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Send the FCM token to WordPress (authenticated)
+ */
+async sendTokenToServer(token) {
+  const userToken = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
+  if (!userToken) {
+    console.warn('No user token found, skipping server update');
+    return;
   }
 
-  /**
-   * Send the FCM token to WordPress (authenticated)
-   */
-  async sendTokenToServer(token) {
-    const userToken = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
-    if (!userToken) {
-      console.warn('No user token found, skipping server update');
-      return;
+  try {
+    const response = await fetch('https://p30s.com/wp-json/pcs/v1/save-fcm-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userToken}`
+      },
+      body: JSON.stringify({
+        fcm_token: token,
+        platform: 'web',
+        app_version: '1.0.0'
+      })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      console.log('✅ Firebase token saved to server successfully');
+    } else {
+      console.error('❌ Failed to save token:', result);
     }
-
-    try {
-      const response = await fetch('https://p30s.com/wp-json/pcs/v1/save-fcm-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}`
-        },
-        body: JSON.stringify({
-          fcm_token: token,
-          platform: 'web',
-          app_version: '1.0.0'
-        })
-      });
-      
-      const result = await response.json();
-      if (result.success) {
-        console.log('Token saved to server successfully');
-      } else {
-        console.error('Failed to save token:', result);
-      }
-    } catch (error) {
-      console.error('Failed to send token to server:', error);
-    }
+  } catch (error) {
+    console.error('❌ Failed to send token to server:', error);
   }
+}
 
   /**
    * Handle foreground messages - اصلاح شده برای جلوگیری از تکرار

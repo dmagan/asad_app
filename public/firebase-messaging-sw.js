@@ -1,87 +1,80 @@
-// firebase-messaging-sw.js - این فایل باید در root پروژه باشد
+// firebase-messaging-sw.js
+// SW_VERSION: 5  ← هر بار آپدیت کردی، این عدد را زیاد کن تا SW فورس آپدیت شود.
 
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
-// Firebase config - از فایل google-services.json شما
+// کانفیگ فایربیس (نسخه Web)
 const firebaseConfig = {
   apiKey: "AIzaSyAtBAJX43-u8aUnHblM3J1xuc0H8qI4qPc",
-  authDomain: "pcs-notification-2fb25.firebaseapp.com",
-  projectId: "pcs-notification-2fb25",
-  storageBucket: "pcs-notification-2fb25.firebasestorage.app",
+  authDomain: "notificationsfinal-10f4a.firebaseapp.com",
+  projectId: "notificationsfinal-10f4a",
+  storageBucket: "notificationsfinal-10f4a.firebasestorage.app",
   messagingSenderId: "315610759144",
   appId: "1:315610759144:android:ea31a415115291b6ddae5d"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
-// Initialize Firebase Cloud Messaging and get a reference to the service
-const messaging = firebase.messaging();
-
-// Handle background messages
-messaging.onBackgroundMessage(function(payload) {
-  console.log('Received background message: ', payload);
-
-  const notificationTitle = payload.notification?.title || 'پیام جدید';
-  const notificationOptions = {
-    body: payload.notification?.body || 'پیام جدیدی دریافت شده',
-    icon: '/logo192.png', // آیکون نوتیفیکیشن
-    badge: '/badge-icon.png', // بج آیکون کوچک
-    tag: 'pcs-notification',
-    requireInteraction: true, // نوتیف تا کلیک نکنن نمیره
-    vibrate: [200, 100, 200], // ویبریشن
-    sound: '/notification-sound.mp3', // صدای نوتیفیکیشن
-    data: {
-      url: payload.data?.url || '/',
-      ...payload.data
-    },
-    actions: [
-      {
-        action: 'open',
-        title: 'مشاهده',
-        icon: '/open-icon.png'
-      },
-      {
-        action: 'close',
-        title: 'بستن',
-        icon: '/close-icon.png'
-      }
-    ]
-  };
-
-  // نمایش نوتیفیکیشن
-  return self.registration.showNotification(notificationTitle, notificationOptions);
-});
-
-// Handle notification click
-self.addEventListener('notificationclick', function(event) {
-  event.notification.close();
-
-  if (event.action === 'close') {
-    return;
+// فقط یک listener برای همه پیام‌ها
+self.addEventListener('push', (event) => {
+  let incoming = {};
+  try {
+    incoming = event.data ? event.data.json() : {};
+  } catch (e) {
+    console.error('Push payload parse error', e);
   }
 
-  // باز کردن صفحه مورد نظر
-  const urlToOpen = event.notification.data?.url || '/';
-  
+  // هم ساختار FCM v1 (message:{}) و هم ساختار ساده رو پشتیبانی می‌کنیم
+  const msg = incoming.message || incoming;
+  const d = msg.data || {};
+  const n = msg.notification || {};
+
+  // اولویت: data → notification → پیش‌فرض
+  const title = d.title || n.title || 'اعلان جدید';
+  const body  = d.body  || n.body  || 'پیام جدیدی دریافت شد';
+  const icon  = d.icon  || n.icon  || '/logo192.png';
+  const badge = d.badge || '/badge-icon.png';
+  const image = d.image || n.image || undefined;
+  const url   = d.url   || d.click_action || n.click_action || '/';
+
+  const options = {
+    body,
+    icon,
+    badge,
+    image,
+    tag: d.tag || 'pcs-notification',
+    renotify: d.renotify === 'true',
+    vibrate: d.vibrate ? tryParseJSON(d.vibrate, [200, 100, 200]) : [200, 100, 200],
+    data: { url, ...d }
+  };
+
   event.waitUntil(
-    clients.matchAll({
-      type: 'window',
-      includeUncontrolled: true
-    }).then(function(clientList) {
-      // اگر تب باز هست، focus کن
-      for (let i = 0; i < clientList.length; i++) {
-        const client = clientList[i];
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      
-      // اگر تب باز نیست، تب جدید باز کن
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
-    })
+    self.registration.showNotification(title, options)
   );
 });
+
+// کلیک روی نوتیف → باز یا فوکوس کردن تب
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  if (event.action === 'close') return;
+
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+
+  event.waitUntil((async () => {
+    const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of allClients) {
+      if (client.url && client.url.startsWith(self.location.origin)) {
+        try { await client.focus(); return; } catch (e) {}
+      }
+    }
+    if (clients.openWindow) {
+      await clients.openWindow(targetUrl);
+    }
+  })());
+});
+
+// تابع کمکی برای parse ایمن JSON
+function tryParseJSON(str, fallback) {
+  try { return JSON.parse(str); } catch (e) { return fallback; }
+}

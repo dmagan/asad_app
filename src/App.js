@@ -1225,15 +1225,30 @@ useEffect(() => {
 // نمایش کارت نوتیفیکیشن بعد از لاگین
 useEffect(() => {
   if (isLoggedIn && firebaseInitialized) {
-    // بررسی که آیا هنوز از کاربر سوال نپرسیده و قبلاً dismiss نکرده
-    if (Notification.permission === 'default' && !localStorage.getItem('notificationDismissed')) {
-      setTimeout(() => {
-        setShowNotificationPrompt(true);
-      }, 2000); // 2 ثانیه بعد از لاگین
+    // بررسی iOS و A2HS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isA2HS = window.navigator.standalone === true;
+    
+    let iosVersionSupported = false;
+    if (isIOS) {
+      const match = navigator.userAgent.match(/OS (\d+)_(\d+)/);
+      if (match) {
+        const major = parseInt(match[1]);
+        const minor = parseInt(match[2]);
+        iosVersionSupported = major > 16 || (major === 16 && minor >= 4);
+      }
+    }
+    
+    // فقط در صورتی که iOS باشد، ورژن 16.4+ باشد، A2HS باشد
+    if (isIOS && iosVersionSupported && isA2HS) {
+      if (Notification.permission === 'default' && !localStorage.getItem('notificationDismissed')) {
+        setTimeout(() => {
+          setShowNotificationPrompt(true);
+        }, 2000);
+      }
     }
   }
 }, [isLoggedIn, firebaseInitialized]);
-
 
   // دریافت قیمت‌های ارز دیجیتال
   useEffect(() => {
