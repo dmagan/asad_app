@@ -4,8 +4,11 @@ export const PRODUCT_PRICES = {
   ZERO_TO_100: '199',
   DEX_ZERO_TO_100_PACKAGE: '349',
   TRADE_PRO: '750',
-  MEM_COIN: '15',
-  
+MEM_COIN: {
+  ONE_MONTH: '15',     // ۱ ماهه - ۱۵ دلار
+  THREE_MONTHS: '40',  // ۳ ماهه - ۴۰ دلار
+  SIX_MONTHS: '80'     // ۶ ماهه - ۸۰ دلار
+},
   // قیمت‌های VIP با دوره‌های مختلف
   VIP: {
     SIX_MONTHS: '199', // 6 ماهه

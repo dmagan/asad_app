@@ -58,7 +58,7 @@ class NewSupportService {
 // بارگذاری لیست تیکت‌ها
 async loadTickets() {
   try {
-    const response = await window.authenticatedFetch('https://p30s.com/wp-json/custom-support/v1/tickets');
+    const response = await window.authenticatedFetch('https://siwoxelo.myhostpoint.ch/wp-json/custom-support/v1/tickets');
     
     if (!response || !response.ok) {
       // اگر 401 یا 403 بود، یعنی مشکل authentication است
@@ -131,7 +131,7 @@ async loadTickets() {
     try {
       
       const response = await window.authenticatedFetch(
-        `https://p30s.com/wp-json/custom-support/v1/tickets/${ticketId}/messages`
+        `https://siwoxelo.myhostpoint.ch/wp-json/custom-support/v1/tickets/${ticketId}/messages`
       );
       
       if (!response || !response.ok) {
@@ -148,7 +148,7 @@ async loadTickets() {
             if (ticket.id !== ticketId) { // تیکت فعلی رو skip کن
               try {
                 const testResponse = await window.authenticatedFetch(
-                  `https://p30s.com/wp-json/custom-support/v1/tickets/${ticket.id}/messages`
+                  `https://siwoxelo.myhostpoint.ch/wp-json/custom-support/v1/tickets/${ticket.id}/messages`
                 );
                 if (testResponse && testResponse.ok) {
                   this.currentTicket = ticket;
@@ -200,7 +200,7 @@ async sendMessage(message, title = null, messageType = 'text', attachmentData = 
 
     if (this.currentTicket) {
       // پیام به تیکت موجود
-      url = `https://p30s.com/wp-json/custom-support/v1/tickets/${this.currentTicket.id}/messages`;
+      url = `https://siwoxelo.myhostpoint.ch/wp-json/custom-support/v1/tickets/${this.currentTicket.id}/messages`;
       payload = { 
         message: message || '',
         message_type: messageType
@@ -216,7 +216,7 @@ async sendMessage(message, title = null, messageType = 'text', attachmentData = 
       if (!title) {
         title = messageType === 'image' ? 'درخواست پشتیبانی جدید (عکس)' : 'درخواست پشتیبانی جدید';
       }
-      url = 'https://p30s.com/wp-json/custom-support/v1/tickets';
+      url = 'https://siwoxelo.myhostpoint.ch/wp-json/custom-support/v1/tickets';
       payload = { 
         title, 
         message: message || '',
@@ -270,7 +270,7 @@ async uploadImage(file) {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await window.authenticatedFetch('https://p30s.com/wp-json/custom-support/v1/upload-image', {
+    const response = await window.authenticatedFetch('https://siwoxelo.myhostpoint.ch/wp-json/custom-support/v1/upload-image', {
       method: 'POST',
       body: formData
     });
@@ -295,7 +295,7 @@ async uploadImage(file) {
   async markMessagesAsRead(ticketId) {
     try {
       const response = await window.authenticatedFetch(
-        `https://p30s.com/wp-json/custom-support/v1/tickets/${ticketId}/mark-read`,
+        `https://siwoxelo.myhostpoint.ch/wp-json/custom-support/v1/tickets/${ticketId}/mark-read`,
         {
           method: 'POST',
           headers: {

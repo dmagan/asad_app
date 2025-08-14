@@ -33,7 +33,7 @@ class FirebaseNotificationService {
       }
 
       // fetch Web Push config from WordPress
-      const response = await fetch('https://p30s.com/wp-json/pcs/v1/web-push-config');
+      const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/web-push-config');
       const data = await response.json();
 
       if (data.success) {
@@ -114,7 +114,7 @@ async sendTokenToServer(token) {
   }
 
   try {
-    const response = await fetch('https://p30s.com/wp-json/pcs/v1/save-fcm-token', {
+    const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/save-fcm-token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

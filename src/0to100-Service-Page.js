@@ -121,7 +121,7 @@ const [videoUrl] = useState('https://persiancryptosource.com/video/learn/0ta100.
       setIsCheckingSubscription(false);
       
       // بررسی API به صورت async - اولویت دوم
-      fetch('https://p30s.com/wp-json/pcs/v1/user-purchases', {
+      fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/user-purchases', {
         headers: {
           'Authorization': `Bearer ${userToken}`,
           'Accept': 'application/json'

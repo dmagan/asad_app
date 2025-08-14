@@ -22,8 +22,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl }) => {
   const touchesRef = useRef([]);
   const [imageLoaded, setImageLoaded] = useState(false);
   const lastTouchDistanceRef = useRef(0);
-  const [addedToHistory, setAddedToHistory] = useState(false);
-
+  
 
   
 
@@ -768,27 +767,20 @@ const [showPaymentCard, setShowPaymentCard] = useState(false);
     }
   }, [isOpen]);
 
-  // مدیریت دکمه برگشت و انیمیشن
-  useEffect(() => {
-  const handleBackButton = (event) => {
-    event.preventDefault();
-    closeCard();
+// ✅ نسخه درست (دقیقاً مثل vipChanel.js)
+useEffect(() => {
+  const handleBackButton = () => {
+    if (isOpen) {
+      closeCard();
+    }
   };
 
-  // اگر صفحه باز است، یک state به تاریخچه اضافه کنیم
-  if (isOpen && !addedToHistory) {
-    window.history.pushState({ mimCoinChannel: true }, '');
-    setAddedToHistory(true);
-  }
-  
-  // شنونده برای رویداد popstate (فشردن دکمه برگشت)
   window.addEventListener('popstate', handleBackButton);
-  
-  // پاکسازی event listener
   return () => {
     window.removeEventListener('popstate', handleBackButton);
   };
-}, [isOpen, addedToHistory]);
+}, [isOpen]);
+
 
   // بستن کارت با انیمیشن
  const closeCard = () => {
@@ -796,8 +788,7 @@ const [showPaymentCard, setShowPaymentCard] = useState(false);
   setTimeout(() => {
     setShowCard(false);
     setIsExiting(false);
-    setAddedToHistory(false);
-    
+        
     if (onClose) {
       onClose();
     } else {
@@ -819,7 +810,7 @@ const [showPaymentCard, setShowPaymentCard] = useState(false);
       setLoading(true);
       const auth = btoa('ck_20b3c33ef902d4ccd94fc1230c940a85be290e0a:cs_e8a85df738324996fd3608154ab5bf0ccc6ded99');
       const response = await fetch(
-        `https://p30s.com/wp-json/wp/v2/posts?_embed&order=desc&orderby=date&per_page=10&page=${pageNumber}&categories=113`,
+        `https://siwoxelo.myhostpoint.ch/wp-json/wp/v2/posts?_embed&order=desc&orderby=date&per_page=10&page=${pageNumber}&categories=113`,
         {
           headers: {
             'Authorization': `Basic ${auth}`
@@ -956,7 +947,7 @@ useEffect(() => {
       
       if (token) {
         try {
-          const response = await fetch('https://p30s.com/wp-json/pcs/v1/user-purchases', {
+          const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/user-purchases', {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Accept': 'application/json'

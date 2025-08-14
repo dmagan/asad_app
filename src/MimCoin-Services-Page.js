@@ -9,6 +9,8 @@ const MimCoinServicesPage = ({ isDarkMode, isOpen, onClose }) => {
   const [showCard, setShowCard] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [showPaymentCard, setShowPaymentCard] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState(null);
+
   const [addedToHistory, setAddedToHistory] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,55 +74,177 @@ const MimCoinServicesPage = ({ isDarkMode, isOpen, onClose }) => {
 
   // این useEffect را اضافه کنید
   useEffect(() => {
-    const checkMimCoinStatus = () => {
-      const userToken = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
-      
-      if (userToken) {
-        const purchasedProductsStr = localStorage.getItem('purchasedProducts');
+    const checkMimCoinStatus = async () => {
+  const userToken = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
+  
+  if (userToken) {
+    // بررسی localStorage
+    const purchasedProductsStr = localStorage.getItem('purchasedProducts');
+    
+    if (purchasedProductsStr) {
+      try {
+        const purchasedProducts = JSON.parse(purchasedProductsStr);
+        const mimCoinSubscription = purchasedProducts.find(p => {
+          const title = p.title?.toLowerCase() || '';
+          const isActive = p.status === 'active';
+          
+          const isMimCoin = (
+            title.includes('میم کوین') ||
+            title.includes('mim coin') ||
+            title.includes('mimcoin') ||
+            title.includes('کانال میم کوین') ||
+            title.includes('میم‌کوین') ||
+            title.includes('میم')
+          );
+          
+          return isMimCoin && isActive;
+        });
         
-        if (purchasedProductsStr) {
-          try {
-            const purchasedProducts = JSON.parse(purchasedProductsStr);
-            const mimCoinSubscription = purchasedProducts.find(p => 
-              p.title && p.title.includes(' میم کوین باز') && p.status === 'active'
+        if (mimCoinSubscription) {
+          setHasMimCoinSubscription(true);
+          return;
+        }
+      } catch (error) {
+      }
+    }
+    
+    // اگر در localStorage نبود، از API بررسی کن
+    try {
+      const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/user-purchases', {
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.purchases) {
+          // بروزرسانی localStorage با اطلاعات جدید
+          const formattedPurchases = data.purchases.map(purchase => ({
+            title: purchase.title,
+            status: purchase.status,
+            date: purchase.date,
+            isVIP: purchase.isVIP || false
+          }));
+          
+          localStorage.setItem('purchasedProducts', JSON.stringify(formattedPurchases));
+
+          // دوباره چک کن
+          const mimCoinProduct = formattedPurchases.find(p => {
+            const title = p.title?.toLowerCase() || '';
+            const isActive = p.status === 'active';
+            
+            const isMimCoin = (
+              title.includes('میم کوین') ||
+              title.includes('mim coin') ||
+              title.includes('mimcoin') ||
+              title.includes('کانال میم کوین') ||
+              title.includes('میم‌کوین') ||
+              title.includes('میم')
             );
             
-            setHasMimCoinSubscription(!!mimCoinSubscription);
-          } catch (error) {
-          }
+            return isMimCoin && isActive;
+          });
+
+          setHasMimCoinSubscription(!!mimCoinProduct);
         }
       }
-    };
+    } catch (error) {
+      console.error('خطا در بررسی اشتراک میم کوین:', error);
+    }
+  }
+};
     
     checkMimCoinStatus();
   }, []);
 
 
 
-  const closeCard = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      setShowCard(false);
-      setIsExiting(false);
-      setAddedToHistory(false);
+  const closeCard = React.useCallback(() => {
+  setIsExiting(true);
+  setTimeout(() => {
+    setShowCard(false);
+    setIsExiting(false);
+    
+    if (onClose) {
       onClose();
-    }, 300);
-  };
+    } else if (location.pathname !== '/') {
+      navigate('/', { replace: true });
+    }
+  }, 300);
+}, [onClose, navigate, location.pathname]);
+
 
   // تابع جدید برای باز کردن کارت پرداخت
-  const handlePurchase = () => {
-    // بررسی وضعیت لاگین کاربر
-    const userToken = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
+// تابع جدید برای باز کردن کارت پرداخت
+const handlePurchase = async (subscription) => {
+  // بررسی وضعیت لاگین کاربر
+  const userToken = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
+  
+  if (!userToken) {
+    // اگر کاربر لاگین نیست، به صفحه لاگین هدایت می‌شود
+    navigate('/login');
+    return;
+  }
+  
+  // قبل از نمایش پنل پرداخت، اشتراک‌های کاربر را دوباره چک کنیم
+  try {
+    const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/user-purchases', {
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
+        'Accept': 'application/json'
+      }
+    });
     
-    if (!userToken) {
-      // اگر کاربر لاگین نیست، به صفحه لاگین هدایت می‌شود
-      navigate('/login');
-      return;
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.purchases)) {
+        // بروزرسانی localStorage
+        localStorage.setItem('purchasedProducts', JSON.stringify(data.purchases));
+        
+        // بررسی اشتراک میم کوین
+        const hasMimCoin = data.purchases.some(p => {
+          const title = p.title?.toLowerCase() || '';
+          const isActive = p.status === 'active';
+          
+          const isMimCoin = (
+            title.includes('میم کوین') ||
+            title.includes('mim coin') ||
+            title.includes('mimcoin') ||
+            title.includes('کانال میم کوین') ||
+            title.includes('میم‌کوین') ||
+            title.includes('میم')
+          );
+          
+          return isMimCoin && isActive;
+        });
+        
+        if (hasMimCoin) {
+  localStorage.setItem('purchasedProducts', JSON.stringify(data.purchases));
+  localStorage.setItem('lastProductCheck', new Date().getTime().toString());
+  sessionStorage.setItem('purchasedProducts', JSON.stringify(data.purchases));
+
+navigate('/mimcoin/channel', { replace: false });
+  return;
+}
+
+      }
     }
     
-    // اگر کاربر لاگین است، کارت پرداخت را نمایش می‌دهیم
+    // اگر اشتراک نداشت، پنل پرداخت را نمایش می‌دهیم
+    setSelectedSubscription(subscription);
     setShowPaymentCard(true);
-  };
+    
+  } catch (error) {
+    console.error('خطا در بررسی اشتراک‌ها:', error);
+    // در صورت خطا، پنل پرداخت را نمایش می‌دهیم
+    setSelectedSubscription(subscription);
+    setShowPaymentCard(true);
+  }
+};
 
   if (!isOpen) return null;
 
@@ -271,20 +395,53 @@ const MimCoinServicesPage = ({ isDarkMode, isOpen, onClose }) => {
   </div>
 </div>
               
-              {/* Course Price */}
-              {!hasMimCoinSubscription && (
-                <div className="p-4 rounded-xl bg-[#141e35] text-white" dir="rtl">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-lg font-bold mb-2 text-yellow-400 text-right">قیمت کانال:</h3>
-                      <p className="text-2xl font-bold text-green-500">{PRODUCT_PRICES.MEM_COIN} دلار</p>
-                    </div>
-                    <div className="bg-yellow-500/20 text-yellow-400 rounded-xl p-2 text-sm">
-                      <p>اشتراک ماهانه</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Pricing Options - فقط اگر اشتراک میم کوین نداشته باشد نمایش داده می‌شود */}
+{!hasMimCoinSubscription && (
+  <div className="p-4 rounded-xl bg-[#141e35] text-white" dir="rtl">
+    <h3 className="text-lg font-bold mb-3 text-yellow-400 text-right">گزینه‌های اشتراک</h3>
+<div className="space-y-4">
+  <div 
+    className="border border-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-800 transition-colors"
+    onClick={() => handlePurchase({ 
+      title: "کانال میم کوین ۱ ماهه", 
+      price: PRODUCT_PRICES.MEM_COIN.ONE_MONTH, 
+      months: 1 
+    })}
+  >
+    <h4 className="font-bold text-lg">اشتراک ۱ ماهه</h4>
+    <p className="text-yellow-500 text-lg mt-1">{PRODUCT_PRICES.MEM_COIN.ONE_MONTH} دلار</p>
+  </div>
+  
+  <div 
+    className="border border-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-800 transition-colors"
+    onClick={() => handlePurchase({ 
+      title: "کانال میم کوین ۳ ماهه", 
+      price: PRODUCT_PRICES.MEM_COIN.THREE_MONTHS, 
+      months: 3 
+    })}
+  >
+    <h4 className="font-bold text-lg">اشتراک ۳ ماهه</h4>
+    <p className="text-yellow-500 text-lg mt-1">{PRODUCT_PRICES.MEM_COIN.THREE_MONTHS} دلار</p>
+  </div>
+  
+  <div 
+    className="border border-gray-700 rounded-lg p-3 bg-gray-800 cursor-pointer hover:bg-gray-700 transition-colors"
+    onClick={() => handlePurchase({ 
+      title: "کانال میم کوین ۶ ماهه", 
+      price: PRODUCT_PRICES.MEM_COIN.SIX_MONTHS, 
+      months: 6 
+    })}
+  >
+    <div className="flex justify-between items-center">
+      <h4 className="font-bold text-lg">اشتراک ۶ ماهه</h4>
+      <span className="bg-yellow-500 text-gray-900 text-xs rounded-full px-2 py-1">پیشنهاد ویژه</span>
+    </div>
+    <p className="text-yellow-500 text-lg mt-1">{PRODUCT_PRICES.MEM_COIN.SIX_MONTHS} دلار</p>
+    <p className="text-gray-400 text-sm mt-1">صرفه‌جویی ۳۳٪ نسبت به خرید ماهانه</p>
+  </div>
+</div>
+  </div>
+)}
             </div>
           </div>
           
@@ -307,18 +464,19 @@ const MimCoinServicesPage = ({ isDarkMode, isOpen, onClose }) => {
           <div className="absolute bottom-6 left-4 right-4 z-10">
             <button 
               onClick={hasMimCoinSubscription 
-                ? () => navigate('/mimcoin')
-                : () => handlePurchase({ 
-                    title: "کانال میم کوین", 
-                    price: PRODUCT_PRICES.MEM_COIN, 
-                    months: 6 
-                  })
-              }
+  ? () => navigate('/mimcoin')
+  : () => handlePurchase({ 
+      title: "کانال میم کوین ۱ ماهه", 
+      price: PRODUCT_PRICES.MEM_COIN.ONE_MONTH, 
+      months: 1 
+    })
+}
+
               className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-4 rounded-xl transition-colors shadow-lg flex items-center justify-center"
               dir="rtl"
             >
               <span>
-                {hasMimCoinSubscription ? 'ورود به کانال میم کوین باز' : (isRenewal ? 'تمدید اشتراک' : 'خرید کانال میم کوین باز')}
+                {hasMimCoinSubscription ? 'ورود به کانال میم کوین باز-' : (isRenewal ? 'تمدید اشتراک' : 'خرید کانال میم کوین باز')}
               </span>
               {/* نمایش آیکون متفاوت بر اساس وضعیت اشتراک */}
               {hasMimCoinSubscription 
@@ -331,14 +489,15 @@ const MimCoinServicesPage = ({ isDarkMode, isOpen, onClose }) => {
       </div>
       
       {/* Payment Card Component */}
-      {showPaymentCard && (
-        <PaymentCard
-          isDarkMode={isDarkMode}
-          onClose={() => setShowPaymentCard(false)}
-          productTitle="کانال میم کوین"
-          price={PRODUCT_PRICES.MEM_COIN}
-        />
-      )}
+      {showPaymentCard && selectedSubscription && (
+  <PaymentCard
+    isDarkMode={isDarkMode}
+    onClose={() => setShowPaymentCard(false)}
+    productTitle={selectedSubscription.title}
+    price={selectedSubscription.price}
+    months={selectedSubscription.months}
+  />
+)}
 
       {/* Video Player */}
       {showVideo && (

@@ -155,7 +155,7 @@ const ProfilePage = ({ isDarkMode, setIsLoggedIn, onLogout }) => {
       }
       
       try {
-        const response = await fetch('https://p30s.com/wp-json/pcs/v1/user-purchases', {
+        const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/user-purchases', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json'

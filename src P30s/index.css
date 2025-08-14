@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'IranSans';
+  src: local('IranSans'),
+       url('./fonts/IRANSansWeb_UltraLight.ttf') format('truetype');
+}
+
+/* استایل‌های جدید برای مخفی کردن اسکرول‌بار */
+html {
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE & Edge */
+}
+
+html::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none; /* Chrome, Safari, Opera */
+}
+
+body {
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE & Edge */
+  margin: 0;
+  font-family: 'IranSans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+}
+
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* استایل‌های موجود شما */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+#root::-webkit-scrollbar {
+  display: none;
+}
+
+#root {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* اضافه کردن این استایل‌ها */
+html, body {
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch; /* برای iOS */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  height: 100%;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important; /* برای iOS */
+  -webkit-appearance: none !important;
+}
+
+@supports (-webkit-touch-callout: none) {
+  /* استایل مخصوص iOS */
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
+}
+
+/* این کلاس رو به div اصلی اضافه کنید */
+.ios-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.ios-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0 !important;
+  height: 0 !important;
+  -webkit-appearance: none;
+}
+
+/*{برای غیر فعال کردن سلکت*/
+* {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* در App.css یا index.css */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  border-radius: 5px;
+  background: #4a5568;
+  outline: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #F7D55D;
+  cursor: pointer;
+}
+
+:root {
+  --background-color: #ffffff;
+  --text-color: #000000;
+}
+
+[data-theme="dark"] {
+  --background-color: #1a1a1a;
+  --text-color: #ffffff;
+}
+
+/* استایل برای همه اجزای نوتیفیکیشن */
+.notification-container * {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+
+/* بهینه‌سازی برای WebView */
+body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* رفع مشکل zoom در iOS */
+input, textarea, select {
+  font-size: 16px !important;
+}

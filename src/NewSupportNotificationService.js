@@ -42,7 +42,7 @@ class NewSupportNotificationService {
       if (!token) return;
       
       // استفاده از API جدید
-      const response = await fetch('https://p30s.com/wp-json/custom-support/v1/unread-count', {
+      const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/custom-support/v1/unread-count', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

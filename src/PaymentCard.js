@@ -33,7 +33,7 @@ const notify = (title, message, type = 'danger', duration = 7000) => {
 const checkTransactionExists = async (hash) => {
   try {
     const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
-    const response = await fetch('https://p30s.com/wp-json/transaction/v1/check', {
+    const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/transaction/v1/check', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -573,7 +573,7 @@ const handleSubmit = async () => {
     
     // بررسی تکراری بودن هش برای هر دو نوع پرداخت
     setUploadProgress(20);
-    const hashCheckResponse = await fetch('https://p30s.com/wp-json/transaction/v1/check', {
+    const hashCheckResponse = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/transaction/v1/check', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -595,7 +595,7 @@ const handleSubmit = async () => {
 
     if (paymentMethod === 'solana') {
       // برای سولانا: ارسال درخواست برای تایید دستی
-      const response = await fetch('https://p30s.com/wp-json/pcs/v1/submit-solana-payment', {
+      const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/submit-solana-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -659,8 +659,8 @@ const handleSubmit = async () => {
       
       // مرحله 1: ابتدا خرید را ثبت کن
       const endpoint = isRenewal ? 
-        'https://p30s.com/wp-json/pcs/v1/renew-subscription' : 
-        'https://p30s.com/wp-json/pcs/v1/save-purchase';
+        'https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/renew-subscription' : 
+        'https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/save-purchase';
 
       const requestData = isRenewal ? {
         transaction_hash: transactionHash,
@@ -693,7 +693,7 @@ const handleSubmit = async () => {
       if (purchaseData.success) {
         // مرحله 2: فقط اگر خرید موفق بود، هش را ذخیره کن
         try {
-          const transactionResponse = await fetch('https://p30s.com/wp-json/transaction/v1/verify', {
+          const transactionResponse = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/transaction/v1/verify', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

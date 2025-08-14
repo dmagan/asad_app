@@ -378,7 +378,7 @@ const handleVIPClick = async () => {
     
     // اگر در localStorage پیدا نشد، از API بررسی می‌کنیم
     const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
-    const response = await fetch('https://p30s.com/wp-json/pcs/v1/check-vip-status', {
+    const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/check-vip-status', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
@@ -682,7 +682,7 @@ const handleMimCoinClick = async () => {
   // مرحله ۲: اگر در localStorage نبود، از سایت چک کن  
   try {
     const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
-    const response = await fetch('https://p30s.com/wp-json/pcs/v1/user-purchases', {
+    const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/user-purchases', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
@@ -965,7 +965,7 @@ useEffect(() => {
     // اگر بیش از 23 ساعت از آخرین تمدید گذشته، توکن را تمدید کنیم
     if (!lastTokenRefresh || (now - parseInt(lastTokenRefresh)) > 23 * 60 * 60 * 1000) {
       try {
-        const response = await fetch('https://p30s.com/wp-json/jwt-auth/v1/token/validate', {
+        const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/jwt-auth/v1/token/validate', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -977,7 +977,7 @@ useEffect(() => {
           const userInfo = JSON.parse(localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo') || '{}');
           if (userInfo.user_email && localStorage.getItem('userPassword')) {
             // اگر رمز عبور ذخیره شده وجود دارد، لاگین مجدد انجام دهیم
-            const loginResponse = await fetch('https://p30s.com/wp-json/jwt-auth/v1/token', {
+            const loginResponse = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/jwt-auth/v1/token', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -1167,7 +1167,7 @@ useEffect(() => {
 
       // سپس سعی کن از API هم بگیری (اختیاری)
       try {
-        const response = await fetch('https://p30s.com/wp-json/wp/v2/users/me', {
+        const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/wp/v2/users/me', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json'
@@ -1301,7 +1301,7 @@ const handleSignalStreamClick = async () => {
   
   try {
     // بررسی وضعیت UID با استفاده از API
-    const response = await fetch('https://p30s.com/wp-json/lbank/v1/check-uid-status', {
+    const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/lbank/v1/check-uid-status', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

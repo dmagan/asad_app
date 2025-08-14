@@ -1,0 +1,336 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import PaymentCard from './PaymentCard';
+import LoginPage from './LoginPage';
+import { PRODUCT_PRICES } from './config';
+import { CircleArrowLeft } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+
+
+
+const BuyPage = ({ isDarkMode }) => {
+  const navigate = useNavigate();
+  const [showPaymentCard, setShowPaymentCard] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLoginPage, setShowLoginPage] = useState(false);
+  const [searchParams] = useSearchParams();
+const [highlightProduct, setHighlightProduct] = useState(null);
+const productRefs = useRef({});
+  
+
+
+  // تابع برای برگشت به صفحه قبلی
+const handleGoBack = () => {
+  if (window.history.length > 1) {
+    navigate(-1); // برگشت به صفحه قبلی
+  } else {
+    navigate('/'); // اگر تاریخچه وجود نداشت، به صفحه اصلی برو
+  }
+};
+
+  // بررسی وضعیت لاگین
+  useEffect(() => {
+    const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
+    setIsLoggedIn(!!token);
+  }, []);
+
+
+// بررسی URL parameter و highlight کردن محصول
+useEffect(() => {
+  const productParam = searchParams.get('product');
+  if (productParam) {
+    setHighlightProduct(productParam);
+    
+    // اسکرول به محصول مورد نظر - بهینه شده برای اندروید
+setTimeout(() => {
+  const productElement = productRefs.current[productParam];
+  if (productElement) {
+    productElement.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center',
+      inline: 'nearest'
+    });
+    
+    // اسکرول اضافی برای جبران sticky header
+  
+  }
+}, 1000);
+    
+    // حذف highlight بعد از 3 ثانیه
+    setTimeout(() => {
+      setHighlightProduct(null);
+    }, 3000);
+  }
+}, [searchParams]);
+
+  // لیست محصولات
+  const products = [
+    {
+      id: 'vip',
+      title: 'اشتراک VIP (6 ماهه)',
+      price: PRODUCT_PRICES.VIP.SIX_MONTHS,
+      description: 'سیگنال‌های پامپی دقیق /  تحلیل‌های اختصاصی تیم PCS / دسترسی به سیگنال هایی که جای دیگه پیدا نمی‌شه / با دادن نقطه ورود و خروج دقیق(چی زمان بفروشی چی زمان بخری)',
+      imageSrc: '/Services/vip.jpg'
+    },
+    {
+      id: 'mimcoin',
+      title: 'کانال میم کوین باز (ماهیانه) ',
+      price: PRODUCT_PRICES.MEM_COIN,
+      description: 'استراتژی‌های حرفه‌ای میم کوین',
+      imageSrc: '/Services/mimCoin.jpg'
+    },
+    {
+      id: 'dex',
+      title: 'آموزش دکس تریدینگ',
+      price: PRODUCT_PRICES.DEX,
+      description: 'پیدا کردن میم‌کوین‌های پامپی 10 تا 200 برابر / فهمیدن ارز های اسکم و شناسایی دقیق / تکنیکال مخصوص میم کوینها',
+      imageSrc: '/Services/dex.jpg'
+    },
+    {
+      id: 'zero-to-100',
+      title: 'آموزش صفر تا صد کریپتو',
+      price: PRODUCT_PRICES.ZERO_TO_100,
+      description: 'پایه برای افراد تازه وارد / آموزش صفر تا صد بازار کریپتو  تمامی مسیر درامد زایی  از کریپتو',
+      imageSrc: '/Services/0to100.jpg'
+    },
+    
+    {
+      id: 'tradepro',
+      title: 'MASTER TRADING',
+      price: PRODUCT_PRICES.TRADE_PRO,
+      description: 'نهنگ ها چگونه ترید میکنن : تمام استراتیژی هایی که برای تبدیل شدن به یک تریدر حرفه‌ای نیاز داری تا استاد شوی',
+      imageSrc: '/Services/TradePro.jpg'
+    }
+  ];
+
+  const handleProductSelect = (product) => {
+    if (!isLoggedIn) {
+      // اگر لاگین نیست، محصول را ذخیره کن و صفحه لاگین را باز کن
+      setSelectedProduct(product);
+      setShowLoginPage(true);
+      return;
+    }
+    
+    // اگر لاگین است، مستقیماً کارت پرداخت را باز کن
+    setSelectedProduct(product);
+    setShowPaymentCard(true);
+  };
+
+  // تابع برای هندل کردن موفقیت آمیز لاگین
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    setShowLoginPage(false);
+    
+    // بعد از لاگین موفق، کارت پرداخت را باز کن
+    if (selectedProduct) {
+      setShowPaymentCard(true);
+    }
+  };
+
+  // تابع برای بستن صفحه لاگین
+  const handleLoginClose = () => {
+    setShowLoginPage(false);
+    setSelectedProduct(null);
+  };
+
+  return (
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+      {/* Header */}{/* Header */}
+<div className={`sticky top-0 z-20 ${
+  isDarkMode 
+    ? 'bg-gradient-to-b from-gray-800 to-gray-900' 
+    : 'bg-gradient-to-b from-white to-gray-100'
+}`}>
+  <div className="flex items-center justify-between p-2">
+    {/* دکمه برگشت */}
+
+    <button
+      onClick={handleGoBack}
+      className={`p-2 rounded-full transition-colors ${
+        isDarkMode 
+          ? 'text-white hover:bg-gray-700' 
+          : 'text-gray-900 hover:bg-gray-200'
+      }`}
+    >
+      <CircleArrowLeft size={32} />
+    </button>
+    
+    <div className="px-4 ">
+  <p className={`text-center text-xl  leading-relaxed ${isDarkMode ? 'text-white' : 'text-gray-900'}`} dir="rtl">
+سلام به صفحه پرداخت خوش آمدید</p>
+</div>
+
+    {/* فضای خالی برای تراز کردن عنوان در وسط */}
+    <div className="w-10 h-10"></div>
+  </div>
+</div>
+{/* Shop Image */}  
+<div className="pb-2 relative">
+  <div className="w-full relative">
+    <img 
+      src="/shop.png" 
+      alt="Shop" 
+      className="w-full h-64 object-cover"
+    />
+  </div>
+</div>
+{/* Text under image */}
+<div className="px-4">
+  <p className={`text-center leading-relaxed ${isDarkMode ? 'text-white' : 'text-gray-900'}`} dir="rtl">
+    <span className="text-lg font-bold">نکته :</span> خدمات مورد نظر را روش کلیک کنید و بعد اول حتما
+    <span className="text-lg font-bold mx-1">ثبت نام کنید</span>
+    (ایمیل آدرس و اسم خودتان را وارد کنید)، بعد می‌توانین خدمات مورد نظر را خریداری کنید.
+    اگر مشکلی داشتید <span className="text-lg font-bold">با تیم پشتیبانی ما</span> ارتباط بگیرین.
+  </p>
+</div>
+
+
+     
+
+
+      {/* Products List */}
+      <div className="p-4">
+        <div className="grid grid-cols-1 gap-4" dir="rtl">
+    {products.map((product) => (
+  <div 
+    key={product.id}
+    ref={(el) => productRefs.current[product.id] = el}
+    onClick={() => handleProductSelect(product)}
+className={`p-4 rounded-2xl flex items-center gap-3 border-2 cursor-pointer hover:opacity-80 transition-all duration-150 ${
+      isDarkMode ? 'border-gray-700 text-white' : 'border-gray-200 text-gray-900'
+    } ${
+      highlightProduct === product.id 
+? 'ring-4 ring-yellow-400 border-yellow-400 shadow-lg transform scale-100 animate-[pulse_1.5s_ease-in-out_2]'
+        : ''
+    }`}
+  >
+    <div className="w-16 h-16 rounded-xl flex items-center justify-center">
+      <img 
+        src={product.imageSrc} 
+        alt={product.title} 
+        className="w-full h-full object-cover rounded-lg" 
+      />
+    </div>
+    <div className="flex-1">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className={`font-medium text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          {product.title}
+        </h3>
+        <span className={`font-black text-xl ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+          ${product.price}
+        </span>
+      </div>
+      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+        {product.description}
+      </p>
+    </div>
+  </div>
+))}
+          
+
+
+
+
+
+            <div 
+onClick={() => window.open('https://t.me/Asadmindset_TeamSupport', '_blank')}
+            className={`p-4 rounded-2xl flex items-center gap-3 border-2 cursor-pointer hover:opacity-80 transition-opacity ${
+              isDarkMode ? 'border-gray-700 text-white' : 'border-gray-200 text-gray-900'
+            }`}
+          >
+            <div className="w-16 h-16 rounded-xl flex items-center justify-center">
+              <div className="w-16 h-16 flex items-center justify-center">
+                <img src="/icons/telegram-icon.png" alt="Telegram" className="w-12 h-12" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className={`font-medium text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                پشتیبانی تلگرام
+              </h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                ارتباط مستقیم از طریق تلگرام
+              </p>
+            </div>
+          </div>
+
+          {/* Download App Button */}
+          <div 
+            onClick={() => window.open('https://persiancryptosource.com/download/', '_blank')}
+            className={`p-4 rounded-2xl flex items-center gap-3 border-2 cursor-pointer hover:opacity-80 transition-opacity ${
+              isDarkMode ? 'border-gray-700 text-white' : 'border-gray-200 text-gray-900'
+            }`}
+          >
+            <div className="w-16 h-16 rounded-xl flex items-center justify-center">
+              <div className="w-16 h-16 flex items-center justify-center">
+                          <div className="w-16 h-16 rounded-xl flex items-center justify-center">
+              <div className="w-16 h-16 flex items-center justify-center">
+                <img src="/icons/download.png" alt="Download" className="w-12 h-12" />
+              </div>
+            </div>
+
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className={`font-medium text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                دانلود اپ
+              </h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                نصب اپلیکیشن موبایل
+              </p>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+
+      {/* Login Page */}
+      {showLoginPage && (
+        <LoginPage
+          isDarkMode={isDarkMode}
+          setIsLoggedIn={handleLoginSuccess}
+          onClose={handleLoginClose}
+          defaultTab="register"
+        />
+      )}
+
+      {/* Payment Card */}
+      {showPaymentCard && selectedProduct && (
+        <PaymentCard
+          isDarkMode={isDarkMode}
+          onClose={() => {
+            setShowPaymentCard(false);
+            setSelectedProduct(null);
+          }}
+          productTitle={selectedProduct.title}
+          price={selectedProduct.price}
+        />
+      )}
+
+      {/* Login Page */}
+      {showLoginPage && (
+        <LoginPage
+          isDarkMode={isDarkMode}
+          setIsLoggedIn={handleLoginSuccess}
+          onClose={handleLoginClose}
+          defaultTab="register"
+        />
+      )}
+
+      {/* Payment Card */}
+      {showPaymentCard && selectedProduct && (
+        <PaymentCard
+          isDarkMode={isDarkMode}
+          onClose={() => {
+            setShowPaymentCard(false);
+            setSelectedProduct(null);
+          }}
+          productTitle={selectedProduct.title}
+          price={selectedProduct.price}
+        />
+      )}
+    </div>
+  );
+};
+
+export default BuyPage;

@@ -1,3 +1,4 @@
+import { X, Bell } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import CourseApp from './CourseApp-support.js';
@@ -77,7 +78,7 @@ supportNotificationService.checkForNewMessages = async function() {
     if (!token) return;
     
     // استفاده از API صحیح wpas-api به جای awesome-support
-    const ticketsResponse = await fetch('https://p30s.com/wp-json/wpas-api/v1/tickets', {
+    const ticketsResponse = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/wpas-api/v1/tickets', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -99,7 +100,7 @@ supportNotificationService.checkForNewMessages = async function() {
     for (const ticket of tickets) {
       try {
         // دریافت پاسخ‌های هر تیکت
-        const repliesResponse = await fetch(`https://p30s.com/wp-json/wpas-api/v1/tickets/${ticket.id}/replies`, {
+        const repliesResponse = await fetch(`https://siwoxelo.myhostpoint.ch/wp-json/wpas-api/v1/tickets/${ticket.id}/replies`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -175,7 +176,7 @@ window.authenticatedFetch = async (url, options = {}) => {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo') || '{}');
         console.log('توکن نامعتبر است، در حال تمدید خودکار در authenticatedFetch...');
         
-        const loginResponse = await fetch('https://p30s.com/wp-json/jwt-auth/v1/token', {
+        const loginResponse = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/jwt-auth/v1/token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -311,9 +312,28 @@ function AppRoutes({
   )
 } />
 
-<Route path="/mimcoin" element={<MimCoinChannel isDarkMode={isDarkMode} />} />
-
-
+<Route path="/mimcoin" element={
+  <>
+    <CourseApp 
+      isDarkMode={isDarkMode} 
+      setIsDarkMode={setIsDarkMode} 
+      products={products} 
+      cryptoPrices={cryptoPrices} 
+      stories={stories} 
+      loading={loading} 
+      sliders={sliders}
+      isLoggedIn={isLoggedIn}
+      onLogout={handleLogout}
+      unreadSupportMessages={unreadSupportMessages}
+      setUnreadSupportMessages={setUnreadSupportMessages}
+    />
+    <MimCoinChannel
+      isDarkMode={isDarkMode}
+      isOpen={true}
+      onClose={() => navigate(-1)}
+    />
+  </>
+} />
 
 
 
@@ -886,6 +906,8 @@ const App = () => {
   const [unreadNewSupportMessages, setUnreadNewSupportMessages] = useState(0);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
     const [firebaseInitialized, setFirebaseInitialized] = useState(false);
+    const [showIOSUpdatePrompt, setShowIOSUpdatePrompt] = useState(false);
+
 
 // -------- Firebase Push Initialization --------
 useEffect(() => {
@@ -954,7 +976,7 @@ useEffect(() => {
     }
     
     try {
-      const response = await fetch('https://p30s.com/wp-json/jwt-auth/v1/token/validate', {
+      const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/jwt-auth/v1/token/validate', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -970,7 +992,7 @@ useEffect(() => {
         
         if (userInfo.user_email && userPassword) {
           // تلاش برای لاگین مجدد با اطلاعات ذخیره شده
-          const loginResponse = await fetch('https://p30s.com/wp-json/jwt-auth/v1/token', {
+          const loginResponse = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/jwt-auth/v1/token', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -1073,7 +1095,7 @@ useEffect(() => {
         if (now > tokenExpiration - 7 * 24 * 60 * 60 * 1000) { // اگر کمتر از 7 روز مانده
           try {
             // ابتدا بررسی کنیم که آیا توکن فعلی هنوز معتبر است
-            const validationResponse = await fetch('https://p30s.com/wp-json/jwt-auth/v1/token/validate', {
+            const validationResponse = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/jwt-auth/v1/token/validate', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -1087,7 +1109,7 @@ useEffect(() => {
               // تمدید توکن با لاگین مجدد
               if (userInfo.user_email) {
                 console.log('در حال تمدید خودکار توکن در استارت اپ...');
-                const response = await fetch('https://p30s.com/wp-json/jwt-auth/v1/token', {
+                const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/jwt-auth/v1/token', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json'
@@ -1127,7 +1149,7 @@ useEffect(() => {
         if (!token) return;
         
         console.log("Reloading user subscriptions...");
-        const response = await fetch('https://p30s.com/wp-json/pcs/v1/user-purchases', {
+        const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/user-purchases', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json'
@@ -1197,7 +1219,7 @@ useEffect(() => {
         const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
         if (!token) return;
         
-        const response = await fetch('https://p30s.com/wp-json/pcs/v1/user-purchases', {
+        const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/user-purchases', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json'
@@ -1221,7 +1243,8 @@ useEffect(() => {
     checkPurchases();
   }
 }, [isLoggedIn]);
-  
+
+
 // نمایش کارت نوتیفیکیشن بعد از لاگین
 useEffect(() => {
   if (isLoggedIn && firebaseInitialized) {
@@ -1229,23 +1252,52 @@ useEffect(() => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isA2HS = window.navigator.standalone === true;
     
-    let iosVersionSupported = false;
-    if (isIOS) {
+    if (isIOS && isA2HS) {
+      // بررسی ورژن iOS
+      let iosVersionSupported = false;
+      let currentVersion = '';
+      
       const match = navigator.userAgent.match(/OS (\d+)_(\d+)/);
       if (match) {
         const major = parseInt(match[1]);
         const minor = parseInt(match[2]);
+        currentVersion = `${major}.${minor}`;
         iosVersionSupported = major > 16 || (major === 16 && minor >= 4);
       }
-    }
-    
-    // فقط در صورتی که iOS باشد، ورژن 16.4+ باشد، A2HS باشد
-    if (isIOS && iosVersionSupported && isA2HS) {
-      if (Notification.permission === 'default' && !localStorage.getItem('notificationDismissed')) {
-        setTimeout(() => {
+      
+      const timer = setTimeout(() => {
+        // اگر ورژن کمتر از 16.4 است
+        if (!iosVersionSupported) {
+          setShowIOSUpdatePrompt(true);
+          return;
+        }
+        
+        // اگر ورژن 16.4+ است - منطق نوتیفیکیشن عادی
+        const notificationStatus = Notification.permission;
+        const isDismissed = localStorage.getItem('notificationDismissed');
+        const deniedCount = parseInt(localStorage.getItem('notificationDeniedCount') || '0');
+        const lastDeniedTime = parseInt(localStorage.getItem('lastNotificationDenied') || '0');
+        const now = Date.now();
+        
+        let shouldShow = false;
+        
+        if (notificationStatus === 'default' && !isDismissed) {
+          shouldShow = true;
+        } else if (notificationStatus === 'denied') {
+          const oneWeek = 7 * 24 * 60 * 60 * 1000;
+          const shouldRetry = deniedCount < 2 && (now - lastDeniedTime) > oneWeek;
+          
+          if (shouldRetry && !isDismissed) {
+            shouldShow = true;
+          }
+        }
+        
+        if (shouldShow) {
           setShowNotificationPrompt(true);
-        }, 2000);
-      }
+        }
+      }, 2000);
+      
+      return () => clearTimeout(timer);
     }
   }
 }, [isLoggedIn, firebaseInitialized]);
@@ -1342,7 +1394,7 @@ useEffect(() => {
     const fetchSliders = async () => {
       try {
         const auth = btoa('ck_20b3c33ef902d4ccd94fc1230c940a85be290e0a:cs_e8a85df738324996fd3608154ab5bf0ccc6ded99');
-        const response = await fetch('https://p30s.com/wp-json/wp/v2/slider?_embed', {
+        const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/wp/v2/slider?_embed', {
           headers: {
             'Authorization': `Basic ${auth}`
           }
@@ -1365,7 +1417,7 @@ useEffect(() => {
     const fetchProducts = async () => {
       try {
         const auth = btoa('ck_20b3c33ef902d4ccd94fc1230c940a85be290e0a:cs_e8a85df738324996fd3608154ab5bf0ccc6ded99');
-        const response = await fetch('https://p30s.com/wp-json/wc/v3/products?per_page=10', {
+        const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/wc/v3/products?per_page=10', {
           headers: {
             'Authorization': `Basic ${auth}`
           }
@@ -1390,7 +1442,7 @@ useEffect(() => {
     const fetchStories = async () => {
       try {
         const auth = btoa('ck_20b3c33ef902d4ccd94fc1230c940a85be290e0a:cs_e8a85df738324996fd3608154ab5bf0ccc6ded99');
-        const response = await fetch('https://p30s.com/wp-json/wp/v2/story_highlights?_embed', {
+        const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/wp/v2/story_highlights?_embed', {
           headers: {
             'Authorization': `Basic ${auth}`
           }
@@ -1463,21 +1515,28 @@ useEffect(() => {
 
 
 // تابع فعال‌سازی اعلان‌ها با User Gesture
+// تابع فعال‌سازی اعلان‌ها با User Gesture
 const handleEnableNotifications = async () => {
-  if (!firebaseInitialized) {
-    alert(' اعلانم ها هنوز آماده نیست. لطفاً کمی صبر کنید.');
-    return;
-  }
-  
   try {
-    const token = await firebaseNotificationService.requestPermission();
-    if (token) {
-      firebaseNotificationService.setupForegroundMessaging();
+    // سعی در استفاده از Firebase اگر موجود باشد
+    if (firebaseInitialized && firebaseNotificationService) {
+      const token = await firebaseNotificationService.requestPermission();
+      if (token) {
+        firebaseNotificationService.setupForegroundMessaging();
+        setShowNotificationPrompt(false);
+        alert('اعلان‌ها با موفقیت فعال شدند!');
+        return;
+      }
+    }
+    
+    // Fallback: استفاده از Basic Notification API
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
       setShowNotificationPrompt(false);
       alert('اعلان‌ها با موفقیت فعال شدند!');
     } else {
       setShowNotificationPrompt(false);
-      alert('مجوز اعلان صادر نشد به قسمت تنیظیمات مراجعه فرمایید و طبق آموزش اعلان ها را فعال کنید.');
+      alert('مجوز اعلان صادر نشد. لطفاً دوباره تلاش کنید.');
     }
   } catch (error) {
     console.error('خطا در فعال‌سازی اعلان‌ها:', error);
@@ -1531,6 +1590,41 @@ return (
       {showIOSPrompt && (
         <IOSInstallPrompt isDarkMode={isDarkMode} onClose={() => setShowIOSPrompt(false)} />
       )}
+
+      {/* iOS Update Prompt */}
+{showIOSUpdatePrompt && (
+  <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4">
+    <div className={`w-full max-w-sm ${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 relative`}>
+      <button
+        onClick={() => setShowIOSUpdatePrompt(false)}
+        className="absolute top-4 left-4 text-gray-400 hover:text-gray-600"
+      >
+        <X size={20} />
+      </button>
+
+      <div className="text-center mb-6">
+        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Bell className="w-8 h-8 text-orange-600" />
+        </div>
+        <h2 className={`text-xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          آپدیت iOS مورد نیاز
+        </h2>
+        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} dir="rtl">
+          برای دریافت اعلان‌ها، لطفاً iOS خود را به ورژن 16.4 یا بالاتر آپدیت کنید
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <button
+          onClick={() => setShowIOSUpdatePrompt(false)}
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 px-4 rounded-xl font-medium transition-colors"
+        >
+          متوجه شدم
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       
       {showDesktopWarning && (
         <DesktopWarning isDarkMode={isDarkMode} />
