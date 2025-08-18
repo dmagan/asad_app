@@ -476,7 +476,7 @@ navigate('/mimcoin/channel', { replace: false });
               dir="rtl"
             >
               <span>
-                {hasMimCoinSubscription ? 'ورود به کانال میم کوین باز-' : (isRenewal ? 'تمدید اشتراک' : 'خرید کانال میم کوین باز')}
+                {hasMimCoinSubscription ? 'ورود به کانال میم کوین باز' : (isRenewal ? 'تمدید اشتراک' : 'خرید کانال میم کوین باز')}
               </span>
               {/* نمایش آیکون متفاوت بر اساس وضعیت اشتراک */}
               {hasMimCoinSubscription 

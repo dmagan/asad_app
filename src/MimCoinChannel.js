@@ -635,7 +635,6 @@ function showCopyToast(message, bgColor) {
 };
 
 processText(doc.body);
-console.log('Processing text completed', doc.body.innerHTML);
 
   if (messageRef.current) {
     messageRef.current.innerHTML = '';

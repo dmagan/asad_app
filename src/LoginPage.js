@@ -235,9 +235,11 @@ const handleLoginSuccess = async (result) => {
     }
     
     console.log("توکن ذخیره شد و کاربر با موفقیت وارد سیستم شد");
+
     
     // دریافت خریدهای کاربر از API
     try {
+
       console.log("در حال دریافت خریدهای کاربر...");
       const purchasesResponse = await fetch('https://p30s.com/wp-json/pcs/v1/user-purchases', {
         headers: {

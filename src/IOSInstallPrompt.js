@@ -108,14 +108,13 @@ const DeviceDetectionWrapper = () => {
     const device = detectDevice();
     setDeviceInfo(device);
     
-    // بررسی اینکه آیا در صفحه buy هستیم یا نه
+// بررسی اینکه آیا در صفحه buy یا tiktok-check هستیم یا نه
     const currentPath = window.location.pathname;
     
-    // اگر در صفحه buy هستیم، پیام را نمایش نده
-    if (currentPath === '/buy') {
+    // اگر در صفحه buy یا tiktok-check هستیم، پیام را نمایش نده
+    if (currentPath === '/buy' || currentPath === '/tiktok-check') {
       return;
-    }
-    
+    }    
     // نمایش پیام فقط اگر دستگاه iOS باشد و زمان نمایش مجدد رسیده باشد
     if (device.isIOS && shouldShowPrompt()) {
       setShowPrompt(true);

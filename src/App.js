@@ -45,6 +45,9 @@ import MimCoinServicesPage from './MimCoin-Services-Page';
 import BuyPage from './BuyPage';
 import firebaseNotificationService from './firebaseNotification';
 import NotificationPromptCard from './NotificationPromptCard';
+import TikTokDetectionPage from './TikTokDetectionPage';
+
+
 
 
 
@@ -1634,7 +1637,10 @@ return (
         <OrientationLock isDarkMode={isDarkMode}>
           <Routes>
             {/* Route مستقل برای صفحه Buy */}
-            <Route path="/buy" element={<BuyPage isDarkMode={isDarkMode} />} />
+      {/* Routes مستقل که بدون چک کردن loading اجرا می‌شوند */}
+      <Route path="/buy" element={<BuyPage isDarkMode={isDarkMode} />} />
+      <Route path="/tiktok-check" element={<TikTokDetectionPage isDarkMode={isDarkMode} />} />
+
             
             {/* بقیه routes */}
             {loading ? (

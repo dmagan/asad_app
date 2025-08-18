@@ -64,7 +64,7 @@ class VIPNotificationService {
       // دریافت پست‌های کانال VIP - دریافت 10 پست آخر برای محاسبه دقیق‌تر
       const auth = btoa('ck_20b3c33ef902d4ccd94fc1230c940a85be290e0a:cs_e8a85df738324996fd3608154ab5bf0ccc6ded99');
       const response = await fetch(
-        'https://p30s.com/wp-json/wp/v2/posts?_embed&order=desc&orderby=date&per_page=10&categories=109',
+        'https://siwoxelo.myhostpoint.ch/wp-json/wp/v2/posts?_embed&order=desc&orderby=date&per_page=10&categories=109',
         {
           headers: {
             'Authorization': `Basic ${auth}`
@@ -135,7 +135,7 @@ class VIPNotificationService {
       }
       
       // اگر در localStorage نبود، از API بررسی می‌کنیم
-      const response = await fetch('https://p30s.com/wp-json/pcs/v1/check-vip-status', {
+      const response = await fetch('https://siwoxelo.myhostpoint.ch/wp-json/pcs/v1/check-vip-status', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'

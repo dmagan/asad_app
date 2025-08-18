@@ -76,7 +76,7 @@ setTimeout(() => {
     {
       id: 'mimcoin',
       title: 'کانال میم کوین باز (ماهیانه) ',
-      price: PRODUCT_PRICES.MEM_COIN,
+price: PRODUCT_PRICES.MEM_COIN.ONE_MONTH,  
       description: 'استراتژی‌های حرفه‌ای میم کوین',
       imageSrc: '/Services/mimCoin.jpg'
     },
