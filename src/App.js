@@ -9,9 +9,10 @@
   import OrientationLock from './OrientationLock';
   import MentorPage from './MentorPage';
   import SupportPage from './SupportPage';
-  import DexPage from './dex'; 
+  import DexPage from './dex';
   import CustomLoading from './CustomLoading';
-  import FaqPage from './faq'; 
+  import FaqPage from './faq';
+  import KnowledgeChatPage from './KnowledgeChatPage';
 
   import ProductsPage from './ProductsPage';
   import PageTransition from './components/PageTransition';
@@ -243,6 +244,7 @@
               
               <Route path="/asad" element={<AsadPage isDarkMode={isDarkMode} />} />
               <Route path="/chat" element={<Chat isDarkMode={isDarkMode} />} />
+              <Route path="/knowledge-chat" element={<KnowledgeChatPage isDarkMode={isDarkMode} />} />
               <Route path="/stories/:storyId" element={<StoriesPage isDarkMode={isDarkMode} stories={stories} />} />
               
               <Route path="/login" element={
